@@ -981,5 +981,5 @@
   }
 
   .fine-art-col .pw-item:hover img {
-    transform: none;
+    transform: scale(1.07);
   }
