@@ -991,3 +991,16 @@ transform: scale(1.04);
 .fine-art-col .pw-item:hover img {
   transform: scale(1.07);
 }
+
+@media (max-width: 700px) {
+  .fine-art-grid {
+    grid-template-columns: 1fr;
+    margin-left: 16px;
+    margin-right: 16px;
+    padding: 16px;
+  }
+
+  .fine-art-col {
+    margin-top: 0;
+  }
+}
