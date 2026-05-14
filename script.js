@@ -69,7 +69,6 @@ document.querySelectorAll('.carousel').forEach(function(carousel) {
     resetAutoplay();
   });
 
-  // Touch/swipe support
   var startX = 0;
   track.addEventListener('touchstart', function(e) {
     startX = e.touches[0].clientX;
@@ -91,7 +90,6 @@ var masonryCarousel = document.querySelector('.masonry-carousel');
 if (masonryCarousel) {
   var masonryTrack = masonryCarousel.querySelector('.masonry-track');
 
-  // Duplicate all images so the loop is seamless
   var originalImgs = Array.from(masonryTrack.querySelectorAll('img'));
   originalImgs.forEach(function(img) {
     var clone = img.cloneNode(true);
@@ -99,15 +97,14 @@ if (masonryCarousel) {
   });
 
   var offset = 0;
-  var speed = 0.6; // pixels per frame — increase to go faster
+  var speed = 0.6;
 
   function getSetWidth() {
-    // width of just the original set (half the total since we duplicated)
     var total = 0;
     var allImgs = masonryTrack.querySelectorAll('img');
     var half = allImgs.length / 2;
     for (var i = 0; i < half; i++) {
-      total += allImgs[i].offsetWidth + 10; // 10 = gap
+      total += allImgs[i].offsetWidth + 10;
     }
     return total;
   }
@@ -115,7 +112,6 @@ if (masonryCarousel) {
   function tick() {
     offset += speed;
     var setWidth = getSetWidth();
-    // once we've scrolled a full set, reset silently to create infinite loop
     if (offset >= setWidth) {
       offset -= setWidth;
     }
@@ -123,7 +119,6 @@ if (masonryCarousel) {
     requestAnimationFrame(tick);
   }
 
-  // Wait for images to load so offsetWidth is correct
   var allImgs = masonryTrack.querySelectorAll('img');
   var loaded = 0;
   allImgs.forEach(function(img) {
@@ -148,7 +143,6 @@ var lightboxPrev = document.getElementById('lightboxPrev');
 var lightboxNext = document.getElementById('lightboxNext');
 
 if (lightbox) {
-  // collect all gallery images in order
   var galleryItems = Array.from(document.querySelectorAll('.pw-item, #fa-grid [data-index]'));
   var galleryImgs = galleryItems.map(function(item) {
     var img = item.querySelector('img');
@@ -183,7 +177,6 @@ if (lightbox) {
     lightboxImg.alt = galleryImgs[lightboxCurrent].alt;
   }
 
-  // open on image click
   galleryItems.forEach(function(item) {
     item.addEventListener('click', function() {
       openLightbox(parseInt(item.dataset.index));
@@ -195,7 +188,6 @@ if (lightbox) {
   lightboxPrev.addEventListener('click', showPrev);
   lightboxNext.addEventListener('click', showNext);
 
-  // keyboard navigation
   document.addEventListener('keydown', function(e) {
     if (!lightbox.classList.contains('active')) return;
     if (e.key === 'ArrowLeft') showPrev();
@@ -203,7 +195,6 @@ if (lightbox) {
     if (e.key === 'Escape') closeLightbox();
   });
 
-  // touch swipe in lightbox
   var lbStartX = 0;
   lightbox.addEventListener('touchstart', function(e) {
     lbStartX = e.touches[0].clientX;
@@ -216,6 +207,56 @@ if (lightbox) {
     }
   }, { passive: true });
 }
+
+// ── SCROLL REVEAL ──
+(function () {
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  var revealSelectors = [
+    '.page-hero-text',
+    '.client-logo',
+    '.overview',
+    '.subsection-title',
+    '.carousel-row',
+    '.carousel-image-row',
+    '.mail-thumbnails-row',
+    '.thumbnail-stack',
+    '.dm-section-title',
+    '.dm-section-sub',
+  ];
+
+  revealSelectors.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.classList.add('reveal');
+      observer.observe(el);
+    });
+  });
+
+  var groupSelectors = [
+    '.carousel-row',
+    '.gif-row',
+    '.dm-gif-row',
+    '.dm-webart-row',
+    '.fine-art-col',
+    '.pw-row',
+  ];
+
+  groupSelectors.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.classList.remove('reveal');
+      el.classList.add('reveal-group');
+      observer.observe(el);
+    });
+  });
+}());
+
 // ── DISABLE RIGHT-CLICK AND DRAG ON IMAGES ──
 document.querySelectorAll('img').forEach(function(img) {
   img.addEventListener('contextmenu', function(e) {

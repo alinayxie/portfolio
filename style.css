@@ -138,7 +138,7 @@ body {
 
 .hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -188,7 +188,7 @@ body {
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   opacity: 0.85;
 }
 
@@ -1003,4 +1003,55 @@ transform: scale(1.04);
   .fine-art-col {
     margin-top: 0;
   }
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* staggered children inside a reveal-group */
+.reveal-group > * {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal-group.visible > * {
+  pointer-events: auto;
+}
+
+/* hero cards are above the fold — skip the reveal animation entirely */
+.hero .cards.reveal-group > *,
+.hero .cards.reveal-group.visible > * {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.reveal-group.visible > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0s; }
+.reveal-group.visible > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.12s; }
+.reveal-group.visible > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.24s; }
+.reveal-group.visible > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.36s; }
+.reveal-group.visible > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 0.48s; }
+.reveal-group.visible > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 0.60s; }
+
+/* page hero text always visible — override reveal for hero */
+.page-hero-text.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.page-hero-text.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: 0.5s;
 }
