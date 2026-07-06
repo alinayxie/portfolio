@@ -2947,6 +2947,14 @@ body.pg-grid-mode {
   height: auto;
 }
 
+.pg-footer-wrap {
+  display: none;
+}
+
+body.pg-grid-mode .pg-footer-wrap {
+  display: block;
+}
+
 body.pg-grid-mode .pg-canvas,
 body.pg-grid-mode .pg-hint-bottom,
 body.pg-grid-mode .pg-coords {
