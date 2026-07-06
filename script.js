@@ -968,10 +968,10 @@ var PG_IMAGE_SOURCES = [
   var rand = mulberry32(20260704);
 
   var isSmallScreen = window.innerWidth <= 700;
-  var TILE_W = isSmallScreen ? 1500 : 2200;
-  var TILE_H = isSmallScreen ? 1000 : 1500;
-  var COLS = isSmallScreen ? 4 : 6;
-  var ROWS = isSmallScreen ? 4 : 4;
+  var TILE_W = isSmallScreen ? 1800 : 2200;
+  var TILE_H = isSmallScreen ? 1400 : 1500;
+  var COLS = isSmallScreen ? 5 : 6;
+  var ROWS = isSmallScreen ? 5 : 4;
   var CELL_W = TILE_W / COLS;
   var CELL_H = TILE_H / ROWS;
 
@@ -1115,7 +1115,7 @@ var PG_IMAGE_SOURCES = [
     var lastX = null;
     var lastY = null;
     var SENSITIVITY = 2.5;
-    var EASE = 0.008;
+    var EASE = 0.01;
 
     targetPanX = panX;
     targetPanY = panY;
