@@ -885,6 +885,11 @@ body {
     height: 40px;
     font-size: 18px;
   }
+
+  .lightbox-img-wrap,
+  .lightbox-img-wrap img {
+    max-width: 68vw;
+  }
 }
 /* ── DIGITAL MEDIA ── */
 .dm-section {
