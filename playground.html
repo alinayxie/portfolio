@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fine Art | Alina Xie</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="pg-body">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-home">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.png" alt="Alina Xie Logo">
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle">Branding <span class="arrow">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="sportsExcitement.html">SportsExcitement</a></li>
+          <li><a href="haddee.html">Haddee Education</a></li>
+        </ul>
+      </li>
+      <li><a href="web-art.html">Web Art</a></li>
+      <li><a href="playground.html">Playground</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="pg-bubbles">
+    <button class="pg-bubble pg-bubble-tab active" data-view="playground">Playground</button>
+    <button class="pg-bubble pg-bubble-tab" data-view="graphic">Graphic Design</button>
+    <button class="pg-bubble pg-bubble-tab" data-view="fineart">Fine Art</button>
+    <!-- <a href="index.html#homeScrollStrip" class="pg-bubble pg-bubble-back">Back to Projects</a> -->
+  </div>
+
+  <p class="pg-hint-bottom" id="pgHint">Move cursor to explore</p>
+
+  <div class="pg-coords" aria-hidden="true">
+    <span>X <b id="pgCoordX">0000</b></span>
+    <span>Y <b id="pgCoordY">0000</b></span>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="pg-loading" id="pgLoading">
+    <img src="images/logo.png" alt="" class="pg-loading-logo">
+    <img src="images/logo.png" alt="" class="pg-loading-logo">
+    <img src="images/logo.png" alt="" class="pg-loading-logo">
+  </div>
+
+  <!-- DRAGGABLE GALLERY CANVAS -->
+  <div class="pg-canvas" id="pgCanvas">
+    <div class="pg-world" id="pgWorld"></div>
+  </div>
+
+  <!-- GRAPHIC DESIGN GRID -->
+  <div class="pg-grid-view" id="pgGraphicView">
+    <div class="fine-art-grid" id="pgGraphicGrid"></div>
+  </div>
+
+  <!-- FINE ART GRID -->
+  <div class="pg-grid-view" id="pgFineArtView">
+    <div class="fine-art-grid" id="pgFineArtGrid"></div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox" aria-modal="true" role="dialog">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">&#10005;</button>
+    <button class="lightbox-arrow lightbox-prev" id="lightboxPrev" aria-label="Previous">&#8592;</button>
+    <div class="lightbox-img-wrap">
+      <img src="" alt="" id="lightboxImg" />
+    </div>
+    <button class="lightbox-arrow lightbox-next" id="lightboxNext" aria-label="Next">&#8594;</button>
+  </div>
+  <div class="lightbox-backdrop" id="lightboxBackdrop"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

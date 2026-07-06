@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Media | Alina Xie</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="images/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="webart-body">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-home">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.png" alt="Alina Xie Logo">
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle">Branding <span class="arrow">▾</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="sportsExcitement.html">SportsExcitement</a></li>
+          <li><a href="haddee.html">Haddee Education</a></li>
+        </ul>
+      </li>
+      <li><a href="web-art.html">Creative Coding</a></li>
+      <li><a href="playground.html">Playground</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="webart-hero">
+    <div class="webart-hero-grid" aria-hidden="true"></div>
+    <div class="webart-hero-inner">
+      <p class="webart-hero-eyebrow">// web art</p>
+      <h1 class="webart-hero-title">Creative Coding</h1>
+      <p class="webart-hero-sub">Built with HTML, CSS &amp; JavaScript</p>
+    </div>
+  </section>
+
+  <!-- WEB ART -->
+  <section class="webart-section">
+    <div class="webart-folder">
+
+      <div class="webart-tabbar" role="tablist">
+        <div class="webart-tabbar-inner">
+          <button class="webart-tab active" data-target="1" role="tab" aria-selected="true">
+            <span class="webart-tab-num">01</span>Inbox as Memory
+          </button>
+          <button class="webart-tab" data-target="2" role="tab" aria-selected="false">
+            <span class="webart-tab-num">02</span>The Accumulation
+          </button>
+          <button class="webart-tab" data-target="3" role="tab" aria-selected="false">
+            <span class="webart-tab-num">03</span>Something Missing
+          </button>
+        </div>
+      </div>
+
+      <div class="webart-viewport">
+        <div class="webart-panel active" data-panel="1">
+          <div class="webart-panel-media">
+            <img src="images/web-art/webArt1.gif" alt="Web Art Project 1 preview">
+          </div>
+          <div class="webart-panel-info">
+            <h2>Inbox as Memory</h2>
+            <p>Inbox as Memory reimagines emails as a space for retained thought. Each folder carries its own animation. It turns the mundane rhythm of 
+              emails to sifting through memories of opening, holding, and letting go.</p>
+            <a href="https://alinax6.github.io/web-art/project1/" target="_blank" class="webart-visit">Launch site <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+
+        <div class="webart-panel" data-panel="2">
+          <div class="webart-panel-media">
+            <img src="images/web-art//webArt2.gif" alt="Web Art Project 2 preview">
+          </div>
+          <div class="webart-panel-info">
+            <h2>The Accumulation</h2>
+            <p>The Accumulation transforms scrolling into an act of accumulation. Beginning at zero, both the counter and the visual debris increase with every 
+              pixel you scroll downward. Through this interaction, the piece translates the staggering statistics of ocean plastic pollution into a visual experience.</p>
+            <a href="https://alinax6.github.io/web-art/project2/" target="_blank" class="webart-visit">Launch site <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+
+        <div class="webart-panel" data-panel="3">
+          <div class="webart-panel-media">
+            <img src="images/web-art/webArt3.gif" alt="Web Art Project 3 preview">
+          </div>
+          <div class="webart-panel-info">
+            <h2>Something Missing</h2>
+            <p>Something Missing follows the search for a recipe's missing ingredient through six memories. Each memory is close, but not quite right. The piece 
+              ends on the realization that the missing part was never a strict ingredient, but permission to let an faded memory evolve into something of your own.</p>
+            <a href="https://alinax6.github.io/web-art/project3/" target="_blank" class="webart-visit">Launch site <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <a href="index.html#homeScrollStrip" class="webart-back-link"><  BACK TO PROJECTS</a>
+
+  <!-- PAGE LINKS -->
+  <hr class="footer-rule">
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-left">
+      <a href="index.html" class="footer-logo">
+        <img src="images/logo.png" alt="Alina Xie Logo">
+      </a>
+      <div class="footer-name-group">
+        <span class="footer-name">Alina Xie</span>
+        <span class="footer-year">&copy; 2026</span>
+        <span class="footer-year">Built with HTML, CSS, JS</span>
+      </div>
+    </div>
+    <div class="footer-right">
+      <a href="mailto:alinayutongxie@gmail.com" class="footer-icon" aria-label="Email">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </a>
+      <a href="https://www.linkedin.com/in/alinayxie" target="_blank" class="footer-icon" aria-label="LinkedIn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+        </svg>
+      </a>
+    </div>
+  </footer>
+
+
+  <script src="script.js"></script>
+</body>
+</html>

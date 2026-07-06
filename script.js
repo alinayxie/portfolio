@@ -143,10 +143,16 @@ var lightboxPrev = document.getElementById('lightboxPrev');
 var lightboxNext = document.getElementById('lightboxNext');
 
 if (lightbox) {
-  var galleryItems = Array.from(document.querySelectorAll('.pw-item, #fa-grid [data-index]'));
-  var galleryImgs = galleryItems.map(function(item) {
+  var galleryItems = Array.from(document.querySelectorAll('.pw-item, #fa-grid [data-index], .pg-item'));
+  var seenIndex = {};
+  var galleryImgs = [];
+  galleryItems.forEach(function(item) {
+    var idx = item.dataset.index;
+    var key = idx !== undefined ? idx : String(galleryImgs.length);
+    if (seenIndex[key] !== undefined) return;
+    seenIndex[key] = galleryImgs.length;
     var img = item.querySelector('img');
-    return { src: img.src, alt: img.alt };
+    galleryImgs.push({ src: img.src, alt: img.alt });
   });
   var lightboxCurrent = 0;
 
@@ -179,9 +185,19 @@ if (lightbox) {
 
   galleryItems.forEach(function(item) {
     item.addEventListener('click', function() {
-      openLightbox(parseInt(item.dataset.index));
+      if (window.__pgWasDragging && window.__pgWasDragging()) return;
+      var idx = item.dataset.index;
+      var mapped = idx !== undefined ? seenIndex[idx] : galleryItems.indexOf(item);
+      openLightbox(mapped);
     });
   });
+
+  // Lets other views (e.g. the filtered playground grids) swap in
+  // their own image set and open the lightbox at a given index.
+  window.__openLightboxWith = function (imgs, index) {
+    galleryImgs = imgs;
+    openLightbox(index);
+  };
 
   lightboxClose.addEventListener('click', closeLightbox);
   lightboxBackdrop.addEventListener('click', closeLightbox);
@@ -266,3 +282,1102 @@ document.querySelectorAll('img').forEach(function(img) {
     e.preventDefault();
   });
 });
+// ── HERO BOUNCY LETTER ANIMATION ──
+(function () {
+  var letters = Array.from(document.querySelectorAll('.hl'));
+  if (!letters.length) return;
+
+  // Also split the subtitle into letter spans
+  var subEl = document.getElementById('heroSub');
+  var subLetters = [];
+  if (subEl) {
+    var text = subEl.textContent;
+    subEl.innerHTML = '';
+    text.split('').forEach(function (ch) {
+      if (ch === ' ') {
+        var sp = document.createElement('span');
+        sp.style.display = 'inline-block';
+        sp.style.width = '0.3em';
+        subEl.appendChild(sp);
+      } else {
+        var span = document.createElement('span');
+        span.className = 'hl-sub';
+        span.textContent = ch;
+        subEl.appendChild(span);
+        subLetters.push(span);
+      }
+    });
+  }
+
+  var state = letters.map(function (el, i) {
+    return {
+      el: el,
+      y: 0, vy: 0,
+      x: 0, vx: 0,
+      rot: 0, vrot: 0,
+      scale: 1, vscale: 0,
+      born: false,
+      entryDelay: 200 + i * 120,
+      isSub: false,
+    };
+  });
+
+  // Subtitle letter states — smaller motion, later entry
+  var subState = subLetters.map(function (el, i) {
+    return {
+      el: el,
+      y: 0, vy: 0,
+      x: 0, vx: 0,
+      rot: 0, vrot: 0,
+      scale: 1, vscale: 0,
+      born: true, // sub letters start visible
+      isSub: true,
+      opacity: 1,
+    };
+  });
+
+  var startTime = null;
+  var mouse = { x: -9999, y: -9999 };
+  var scattered = false;
+
+  var STIFFNESS = 0.07;
+  var DAMPING   = 0.82;
+  var ROT_STIFF = 0.08;
+  var ROT_DAMP  = 0.80;
+  var SCL_STIFF = 0.09;
+  var SCL_DAMP  = 0.81;
+
+  var WAVE_AMP   = 5;
+  var WAVE_SPEED = 0.0005;
+  var WAVE_PHASE = 0.5;
+
+  function tickLetter(s, i, now, elapsed) {
+    if (elapsed < s.entryDelay) {
+      s.el.style.opacity = '0';
+      s.el.style.transform = 'translateY(-80px) rotate(-12deg) scale(0.6)';
+      return;
+    }
+    if (!s.born) {
+      s.born = true;
+      s.y = -80; s.vy = 1.5 + Math.random() * 2;
+      s.rot = (Math.random() - 0.5) * 35;
+      s.vrot = (Math.random() - 0.5) * 4;
+      s.scale = 0.6; s.vscale = 0.025;
+      s.x = 0; s.vx = 0;
+    }
+
+    if (scattered) {
+      s.x  += s.vx; s.vx *= 0.992;
+      s.y  += s.vy; s.vy *= 0.992;
+      s.rot += s.vrot; s.vrot *= 0.992;
+      s.scale += s.vscale; s.vscale *= 0.992;
+      s.scale = Math.max(0.01, s.scale);
+      var op = Math.max(0, Math.min(1, s.scale * 2.2));
+      s.el.style.opacity = op.toFixed(3);
+    } else {
+      var waveTarget = WAVE_AMP * Math.sin(now * WAVE_SPEED + i * WAVE_PHASE);
+      s.vx = ((s.vx || 0) + -0.12 * s.x) * 0.80;
+      s.x += s.vx;
+      if (Math.abs(s.x) < 0.1) s.x = 0;
+      s.vy = (s.vy + -STIFFNESS * (s.y - waveTarget)) * DAMPING;
+      s.y += s.vy;
+      s.vrot = (s.vrot + -ROT_STIFF * s.rot) * ROT_DAMP;
+      s.rot += s.vrot;
+      s.vscale = (s.vscale + -SCL_STIFF * (s.scale - 1)) * SCL_DAMP;
+      s.scale += s.vscale;
+
+      // Mouse proximity — bouncy repulsion
+      var rect = s.el.getBoundingClientRect();
+      var cx = rect.left + rect.width  / 2;
+      var cy = rect.top  + rect.height / 2;
+      var dx = cx - mouse.x;
+      var dy = cy - mouse.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 90 && dist > 0) {
+        var force = (1 - dist / 90) * 6;
+        s.vy   -= (dy / dist) * force * 0.3;
+        s.vx   -= (dx / dist) * force * 0.2;
+        s.vrot += (dx / dist) * force * 0.4;
+        s.vscale += (1 - dist / 90) * 0.02;
+      }
+
+      s.el.style.opacity = '1';
+    }
+
+    s.el.style.transform =
+      'translateX(' + (s.x || 0).toFixed(2) + 'px)' +
+      ' translateY(' + s.y.toFixed(2) + 'px)' +
+      ' rotate(' + s.rot.toFixed(2) + 'deg)' +
+      ' scale(' + s.scale.toFixed(3) + ')';
+  }
+
+  function tickSubLetter(s, i, now) {
+    if (scattered) {
+      s.x  += s.vx; s.vx *= 0.992;
+      s.y  += s.vy; s.vy *= 0.992;
+      s.rot += s.vrot; s.vrot *= 0.992;
+      s.scale += s.vscale; s.vscale *= 0.992;
+      s.scale = Math.max(0.01, s.scale);
+      var op = Math.max(0, Math.min(1, s.scale * 2.2));
+      s.el.style.opacity = op.toFixed(3);
+    } else {
+      // Gentle wave, smaller amplitude
+      var waveTarget = 3 * Math.sin(now * WAVE_SPEED * 0.8 + i * 0.4 + 1.5);
+      s.vx = ((s.vx || 0) + -0.10 * s.x) * 0.82;
+      s.x += s.vx;
+      s.vy = (s.vy + -STIFFNESS * (s.y - waveTarget)) * DAMPING;
+      s.y += s.vy;
+      s.vrot = (s.vrot + -ROT_STIFF * s.rot) * ROT_DAMP;
+      s.rot += s.vrot;
+      s.vscale = (s.vscale + -SCL_STIFF * (s.scale - 1)) * SCL_DAMP;
+      s.scale += s.vscale;
+      s.el.style.opacity = '1';
+    }
+
+    s.el.style.transform =
+      'translateX(' + (s.x || 0).toFixed(2) + 'px)' +
+      ' translateY(' + s.y.toFixed(2) + 'px)' +
+      ' rotate(' + s.rot.toFixed(2) + 'deg)' +
+      ' scale(' + s.scale.toFixed(3) + ')';
+  }
+
+  // Hero art images — floating wave + scatter
+  var artLeft  = document.querySelector('.hero-art-left');
+  var artRight = document.querySelector('.hero-art-right');
+  var artState = [artLeft, artRight].filter(Boolean).map(function (el, i) {
+    return {
+      el: el,
+      y: 0, vy: 0,
+      x: 0, vx: 0,
+      rot: i === 0 ? -4 : 4,   // preserve their natural tilt offset
+      baseRot: i === 0 ? -4 : 4,
+      vrot: 0,
+      scale: 1, vscale: 0,
+      phaseOffset: i === 0 ? 0 : Math.PI, // opposite phase for a see-saw feel
+    };
+  });
+
+  function tickArt(s, i, now) {
+    if (scattered) {
+      s.x  += s.vx; s.vx *= 0.992;
+      s.y  += s.vy; s.vy *= 0.992;
+      s.rot += s.vrot; s.vrot *= 0.992;
+      s.scale += s.vscale; s.vscale *= 0.992;
+      s.scale = Math.max(0.01, s.scale);
+      var op = Math.max(0, Math.min(1, s.scale * 2.2));
+      s.el.style.opacity = op.toFixed(3);
+    } else {
+      // Float up/down with a slow wave, slightly out of phase with each other
+      var waveTarget = 8 * Math.sin(now * WAVE_SPEED * 0.7 + s.phaseOffset);
+      s.vy = (s.vy + -STIFFNESS * (s.y - waveTarget)) * DAMPING;
+      s.y += s.vy;
+
+      // Gentle rock back toward base rotation
+      var rotTarget = s.baseRot + 2 * Math.sin(now * WAVE_SPEED * 0.5 + s.phaseOffset + 1);
+      s.vrot = (s.vrot + -0.06 * (s.rot - rotTarget)) * 0.88;
+      s.rot += s.vrot;
+
+      // Spring x back to 0
+      s.vx = (s.vx + -0.10 * s.x) * 0.85;
+      s.x += s.vx;
+
+      // Spring scale back to 1
+      s.vscale = (s.vscale + -SCL_STIFF * (s.scale - 1)) * SCL_DAMP;
+      s.scale += s.vscale;
+
+      s.el.style.opacity = '1';
+    }
+
+    s.el.style.transform =
+      'translateX(' + s.x.toFixed(2) + 'px)' +
+      ' translateY(' + s.y.toFixed(2) + 'px)' +
+      ' rotate(' + s.rot.toFixed(2) + 'deg)' +
+      ' scale(' + s.scale.toFixed(3) + ')';
+  }
+
+  function tick(now) {
+    if (!startTime) startTime = now;
+    var elapsed = now - startTime;
+    state.forEach(function (s, i) { tickLetter(s, i, now, elapsed); });
+    subState.forEach(function (s, i) { tickSubLetter(s, i, now); });
+    artState.forEach(function (s, i) { tickArt(s, i, now); });
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+
+  var hero = document.getElementById('homeHero');
+
+  function triggerScatter() {
+    // Main letters
+    state.forEach(function (s) {
+      if (!s.born) return;
+      var angle = Math.random() * Math.PI * 2;
+      var speed = 2 + Math.random() * 3.5;
+      s.vy = Math.sin(angle) * speed - 0.8;
+      s.vrot = (Math.random() - 0.5) * 8;
+      s.vscale = -(0.008 + Math.random() * 0.012);
+      s.x = s.x || 0;
+      s.vx = Math.cos(angle) * speed * 1.1;
+    });
+    // Subtitle letters
+    subState.forEach(function (s) {
+      var angle = Math.random() * Math.PI * 2;
+      var speed = 1.5 + Math.random() * 2.5;
+      s.vy = Math.sin(angle) * speed - 0.6;
+      s.vrot = (Math.random() - 0.5) * 6;
+      s.vscale = -(0.006 + Math.random() * 0.01);
+      s.x = s.x || 0;
+      s.vx = Math.cos(angle) * speed * 1.0;
+    });
+    // Art images — drift outward to their respective sides
+    artState.forEach(function (s, i) {
+      var dir = i === 0 ? -1 : 1; // left image goes left, right goes right
+      var speed = 1.5 + Math.random() * 2;
+      s.vx = dir * speed * 1.8;
+      s.vy = -(0.5 + Math.random() * 1.5);
+      s.vrot = dir * (1 + Math.random() * 3);
+      s.vscale = -(0.006 + Math.random() * 0.008);
+    });
+  }
+
+  function triggerReassemble() {
+    state.forEach(function (s) {
+      s.x = s.x || 0; s.vx = s.vx || 0;
+      s.vy    += (0 - s.y)    * 0.03;
+      s.vrot  += (0 - s.rot)  * 0.03;
+      s.vscale += (1 - s.scale) * 0.03;
+    });
+    subState.forEach(function (s) {
+      s.x = s.x || 0; s.vx = s.vx || 0;
+      s.vy    += (0 - s.y)    * 0.03;
+      s.vrot  += (0 - s.rot)  * 0.03;
+      s.vscale += (1 - s.scale) * 0.03;
+    });
+    artState.forEach(function (s) {
+      s.vx    += (0 - s.x)           * 0.02;
+      s.vy    += (0 - s.y)           * 0.02;
+      s.vrot  += (s.baseRot - s.rot) * 0.02;
+      s.vscale += (1 - s.scale)      * 0.02;
+    });
+  }
+
+  function checkScatter() {
+    if (!hero) return;
+    var heroRect = hero.getBoundingClientRect();
+    var scrolledPast = -heroRect.top;
+    var triggerPoint = window.innerHeight * 0.45;
+
+    if (scrolledPast > triggerPoint && !scattered) {
+      scattered = true;
+      triggerScatter();
+    } else if (scrolledPast < triggerPoint * 0.6 && scattered) {
+      scattered = false;
+      triggerReassemble();
+    }
+  }
+
+  window.addEventListener('scroll', checkScatter, { passive: true });
+
+  if (hero) {
+    hero.addEventListener('mousemove', function (e) {
+      mouse.x = e.clientX; mouse.y = e.clientY;
+    });
+    hero.addEventListener('mouseleave', function () {
+      mouse.x = -9999; mouse.y = -9999;
+    });
+    hero.addEventListener('touchmove', function (e) {
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
+    }, { passive: true });
+    hero.addEventListener('touchend', function () {
+      mouse.x = -9999; mouse.y = -9999;
+    });
+  }
+}());
+
+// ── HOME: PAGE-SCROLL DRIVEN STRIP ──
+(function () {
+  var outer       = document.getElementById('homeLayoutOuter');
+  var track       = document.getElementById('homeStripTrack');
+  var thumbs      = document.querySelectorAll('.home-thumb');
+  var dots        = document.querySelectorAll('.dot');
+  var hero        = document.getElementById('homeHero');
+  var projectInfo = document.getElementById('homeProjectInfo');
+  var infoTitle   = document.getElementById('infoTitle');
+  var infoCategory= document.getElementById('infoCategory');
+  var infoDesc    = document.getElementById('infoDesc');
+  var infoCta     = document.getElementById('infoCta');
+  var textPanel   = document.getElementById('homeTextPanel');
+  var bgLayer     = document.getElementById('homeBgLayer');
+
+  if (!outer || !track || !thumbs.length) return;
+
+  // Colors: index 0 = hero, 1 = Sports Excitement, 2 = Haddee, 3 = Web Art, 4 = Playground
+  var bgColors = [
+    '#f9f9f7',  // hero — warm off-white (also used while on Sports Excitement)
+    '#f9f9f7',  // thumb 0 (Sports Excitement) — same as hero, no change yet
+    '#e8e4f0',  // thumb 1 (Haddee) — soft lavender
+    '#e4ede8',  // thumb 2 (Web Art) — sage green
+    '#f0e8e4',  // thumb 3 (Playground) — dusty rose
+  ];
+
+  function setBgColor(dotIdx) {
+    if (!bgLayer) return;
+    var color = bgColors[Math.min(dotIdx, bgColors.length - 1)] || bgColors[bgColors.length - 1];
+    bgLayer.style.backgroundColor = color;
+  }
+
+  var n           = thumbs.length;
+  var cardH       = 0;
+  var trackPad    = 0;  // top/bottom padding on the track
+  var stripH      = 0;
+  var currentIdx  = 0;
+  var targetY     = 0;
+  var currentY    = 0;
+  var hasEntered  = false; // true once user has scrolled into the outer
+
+  // ── Size the outer wrapper so page has enough room to scroll ──
+  function measure() {
+    var thumbEl = thumbs[0];
+    var style   = window.getComputedStyle(thumbEl);
+    var mt      = parseFloat(style.marginTop)    || 14;
+    var mb      = parseFloat(style.marginBottom) || 14;
+    cardH    = thumbEl.offsetHeight + mt + mb;
+    trackPad = Math.max(0, (window.innerHeight - thumbEl.offsetHeight) / 2);
+    stripH   = cardH * n + trackPad * 2;
+    outer.style.height = stripH + 'px';
+  }
+
+  // ── Map page scroll position inside the outer to a strip offset ──
+  function getTargetY() {
+    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+    var scrolled = Math.max(0, window.scrollY - outerTop);
+    return -scrolled;
+  }
+
+  // ── Which thumb index is currently centered ──
+  function getActiveThumb(y) {
+    // Account for trackPad: first card center is at trackPad + cardH/2
+    var scrolled = -y; // how far the track has moved up
+    var idx = Math.round((scrolled - trackPad) / cardH);
+    return Math.max(0, Math.min(n - 1, idx));
+  }
+
+  // ── Lerp animation loop ──
+  function animate() {
+    targetY  = getTargetY();
+    currentY += (targetY - currentY) * 0.1;
+
+    var rounded = Math.round(currentY);
+    track.style.transform = 'translateY(' + rounded + 'px)';
+
+    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+    var scrolledIntoOuter = window.scrollY - outerTop;
+
+    // Only start tracking thumbs once user has scrolled past the trackPad
+    // (i.e. the first card is actually starting to center)
+    if (scrolledIntoOuter > trackPad * 0.5) {
+      hasEntered = true;
+    }
+
+    if (hasEntered) {
+      var thumbIdx = getActiveThumb(currentY);
+      var dotIdx   = thumbIdx + 1;
+      if (dotIdx !== currentIdx) markActive(dotIdx, thumbs[thumbIdx]);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // ── Update dots and text panel ──
+  function updateDots(idx) {
+    dots.forEach(function (d, i) {
+      d.classList.toggle('active', i === idx);
+    });
+  }
+
+  function getThumbContent(thumb) {
+    var titleEl    = thumb.querySelector('.thumb-title');
+    var categoryEl = thumb.querySelector('.thumb-category');
+    var descEl     = thumb.querySelector('.thumb-desc');
+    var ctaEl      = thumb.querySelector('.thumb-cta');
+    return {
+      title:    titleEl    ? titleEl.innerHTML        : thumb.dataset.title,
+      category: categoryEl ? categoryEl.textContent   : thumb.dataset.category,
+      desc:     descEl     ? descEl.textContent        : thumb.dataset.desc,
+      cta:      ctaEl      ? ctaEl.textContent         : thumb.dataset.cta,
+      href:     ctaEl      ? ctaEl.getAttribute('href'): thumb.dataset.href
+    };
+  }
+
+  function updateTextPanel(thumb, thumbIdx) {
+    if (!projectInfo) return;
+    var content = getThumbContent(thumb);
+    projectInfo.classList.add('updating');
+    setTimeout(function () {
+      infoTitle.innerHTML   = content.title;
+      infoCategory.textContent = content.category;
+      infoDesc.textContent  = content.desc;
+      infoCta.textContent   = content.cta;
+      infoCta.href          = content.href;
+      projectInfo.classList.remove('updating');
+    }, 200);
+  }
+
+  function markActive(dotIdx, thumb) {
+    if (dotIdx === currentIdx) return;
+    currentIdx = dotIdx;
+    updateDots(dotIdx);
+    setBgColor(dotIdx);
+    thumbs.forEach(function (t, i) {
+      t.classList.toggle('is-active', i === dotIdx - 1);
+    });
+    if (thumb) updateTextPanel(thumb, dotIdx - 1);
+  }
+
+  // ── Hero visibility → dot 0 ──
+  if (hero) {
+    var heroObs = new IntersectionObserver(function (entries) {
+      if (entries[0].intersectionRatio >= 0.4 && currentIdx !== 0) {
+        hasEntered = false;
+        currentIdx = 0;
+        updateDots(0);
+        setBgColor(0);
+      }
+    }, { threshold: 0.4 });
+    heroObs.observe(hero);
+  }
+
+  // ── Dot clicks ──
+  dots.forEach(function (dot, i) {
+    dot.addEventListener('click', function () {
+      if (dot.dataset.target === 'hero') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        var thumbIdx = parseInt(dot.dataset.target);
+        // Scroll page to position where that card will be centered
+        var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+        var dest     = outerTop + thumbIdx * cardH + cardH / 2 - window.innerHeight / 2;
+        window.scrollTo({ top: Math.max(outerTop, dest), behavior: 'smooth' });
+      }
+    });
+  });
+
+  // ── Scroll hint arrow → jump to first thumbnail ──
+  var scrollHint = document.querySelector('.slide-scroll-hint');
+  if (scrollHint) {
+    scrollHint.style.cursor = 'pointer';
+    scrollHint.addEventListener('click', function () {
+      var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+      var dest = outerTop + cardH / 2 - window.innerHeight / 2;
+      window.scrollTo({ top: Math.max(outerTop, dest), behavior: 'smooth' });
+    });
+  }
+
+  // ── Click inactive thumb → scroll it into center ──
+  thumbs.forEach(function (thumb, thumbIdx) {
+    thumb.addEventListener('click', function (e) {
+      // On mobile the scroll-driven layout is inactive — let links work normally
+      if (window.innerWidth <= 860) return;
+      window.location.href = thumb.dataset.href;
+    });
+  });
+
+  // ── Keyboard ──
+  document.addEventListener('keydown', function (e) {
+    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+    var inView   = window.scrollY >= outerTop - window.innerHeight &&
+                   window.scrollY <= outerTop + outer.offsetHeight;
+    if (!inView) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      e.preventDefault();
+      var next = Math.min(currentIdx, n - 1);
+      var dest = outerTop + next * cardH + cardH / 2 - window.innerHeight / 2;
+      window.scrollTo({ top: Math.max(outerTop, dest), behavior: 'smooth' });
+    }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      var prev = currentIdx - 2;
+      if (prev < 0) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        var destUp = outerTop + prev * cardH + cardH / 2 - window.innerHeight / 2;
+        window.scrollTo({ top: Math.max(outerTop, destUp), behavior: 'smooth' });
+      }
+    }
+  });
+
+  // ── Init ──
+  function init() {
+    measure();
+    // Start with hero dot active, but pre-load Sports Excitement text
+    // so when user scrolls in it's already correct (no flash to Haddee)
+    currentIdx = 0;
+    thumbs[0].classList.add('is-active');
+    // Pre-populate text panel silently (no fade animation on load)
+    var initialContent = getThumbContent(thumbs[0]);
+    infoTitle.innerHTML      = initialContent.title;
+    infoCategory.textContent = initialContent.category;
+    infoDesc.textContent     = initialContent.desc;
+    infoCta.textContent      = initialContent.cta;
+    infoCta.href             = initialContent.href;
+    updateDots(0);
+    setBgColor(0);
+    animate();
+  }
+
+  window.addEventListener('resize', function () {
+    measure();
+  });
+
+  init();
+}());
+// ── PROJECT PAGE (proj-*): hscroll drag, arrows, scroll reveal ──
+(function () {
+  if (!document.querySelector('.proj-hscroll')) return;
+
+  // Drag-to-scroll
+  document.querySelectorAll('.proj-hscroll').forEach(function(el) {
+    var isDown = false, startX, scrollLeft;
+    el.addEventListener('mousedown', function(e) { isDown = true; startX = e.pageX - el.offsetLeft; scrollLeft = el.scrollLeft; });
+    el.addEventListener('mouseleave', function() { isDown = false; });
+    el.addEventListener('mouseup', function() { isDown = false; });
+    el.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
+    });
+  });
+
+  // Arrow buttons
+  document.querySelectorAll('.proj-hscroll-wrap').forEach(function(wrap) {
+    var strip = wrap.querySelector('.proj-hscroll');
+    var prev = wrap.querySelector('.proj-hscroll-prev');
+    var next = wrap.querySelector('.proj-hscroll-next');
+    if (prev) prev.addEventListener('click', function() { strip.scrollBy({ left: -300, behavior: 'smooth' }); });
+    if (next) next.addEventListener('click', function() { strip.scrollBy({ left: 300, behavior: 'smooth' }); });
+  });
+
+  // Scroll-triggered reveal
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('proj-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.proj-section-inner').forEach(function(el) {
+    el.classList.add('proj-hidden');
+    observer.observe(el);
+  });
+
+  document.querySelectorAll('.proj-hscroll, .proj-colors').forEach(function(el) {
+    observer.observe(el);
+  });
+}());
+// ── BACK LINK: track left edge of content ──
+(function () {
+  var backLink = document.querySelector('.proj-back-link');
+  if (!backLink) return;
+
+  function update() {
+    var inner = document.querySelector('.proj-hero') || document.querySelector('.proj-section-inner');
+    if (!inner) return;
+    var contentLeft = inner.getBoundingClientRect().left;
+    var linkWidth = backLink.offsetWidth;
+    var gap = 24;
+    var left = Math.max(16, contentLeft - linkWidth - gap);
+    document.documentElement.style.setProperty('--back-link-left', left + 'px');
+  }
+
+  update();
+  window.addEventListener('resize', update);
+  window.addEventListener('scroll', update);
+}());
+// ── WEB ART: folder-tab switcher ──
+(function () {
+  var tabs = document.querySelectorAll('.webart-tab');
+  if (!tabs.length) return;
+
+  var panels = document.querySelectorAll('.webart-panel');
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var target = tab.getAttribute('data-target');
+
+      tabs.forEach(function (t) {
+        var isActive = t === tab;
+        t.classList.toggle('active', isActive);
+        t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      panels.forEach(function (panel) {
+        panel.classList.toggle('active', panel.getAttribute('data-panel') === target);
+      });
+    });
+  });
+}());
+// ── PLAYGROUND: shared image data ──
+var PG_IMAGE_SOURCES = [
+  'images/playground/fineArt/fineArt1.png',
+  'images/playground/fineArt/fineArt2.png',
+  'images/playground/fineArt/fineArt3.png',
+  'images/playground/graphicDesign/graphicDesign1.jpg',
+  'images/playground/fineArt/fineArt12.jpg',
+  'images/playground/graphicDesign/graphicDesign4.png',
+  'images/playground/fineArt/fineArt13.jpeg',
+  'images/playground/graphicDesign/graphicDesign3.png',
+  'images/playground/fineArt/fineArt4.png',
+  'images/playground/fineArt/fineArt5.png',
+  'images/playground/fineArt/fineArt6.png',
+  'images/playground/fineArt/fineArt7.png',
+  'images/playground/graphicDesign/graphicDesign2.jpg',
+  'images/playground/graphicDesign/graphicDesign5.jpg',
+  'images/playground/fineArt/fineArt8.png',
+  'images/playground/fineArt/fineArt9.png',
+  'images/playground/fineArt/fineArt10.png',
+  'images/playground/fineArt/fineArt11.png',
+  'images/playground/graphicDesign/graphicDesign6.png',
+  'images/playground/graphicDesign/graphicDesign7.png',
+  'images/playground/graphicDesign/graphicDesign8.jpg'
+];
+
+// ── PLAYGROUND: infinite drag-to-pan gallery ──
+(function () {
+  var canvas = document.getElementById('pgCanvas');
+  var world = document.getElementById('pgWorld');
+  if (!canvas || !world) return;
+
+  var IMAGE_SOURCES = PG_IMAGE_SOURCES;
+
+  // Deterministic pseudo-random generator so the scattered layout
+  // is stable across reloads instead of reshuffling every visit.
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0;
+      seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  var rand = mulberry32(20260704);
+
+  var TILE_W = 2200;
+  var TILE_H = 1500;
+  var COLS = 6;
+  var ROWS = 4;
+  var CELL_W = TILE_W / COLS;
+  var CELL_H = TILE_H / ROWS;
+
+  var cells = [];
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      cells.push({ r: r, c: c });
+    }
+  }
+  // Shuffle deterministically so images don't land in reading order
+  for (var i = cells.length - 1; i > 0; i--) {
+    var j = Math.floor(rand() * (i + 1));
+    var tmp = cells[i]; cells[i] = cells[j]; cells[j] = tmp;
+  }
+
+  var layout = IMAGE_SOURCES.map(function (src, idx) {
+    var cell = cells[idx % cells.length];
+    var scale = 0.75 + rand() * 0.55; // 0.75x – 1.3x, keeps each image's own ratio
+    var jitterX = (rand() - 0.5) * (CELL_W * 0.4);
+    var jitterY = (rand() - 0.5) * (CELL_H * 0.4);
+    var rotation = (rand() - 0.5) * 16; // roughly -8deg to 8deg
+    return {
+      src: src,
+      x: cell.c * CELL_W + CELL_W / 2 + jitterX,
+      y: cell.r * CELL_H + CELL_H / 2 + jitterY,
+      scale: scale,
+      rotation: rotation
+    };
+  });
+
+  // Render a 3x3 grid of tiles so panning in any direction always
+  // reveals a seamless neighboring copy instead of empty space.
+  var OFFSETS = [-1, 0, 1];
+  var fragment = document.createDocumentFragment();
+
+  OFFSETS.forEach(function (oy) {
+    OFFSETS.forEach(function (ox) {
+      layout.forEach(function (item, idx) {
+        var el = document.createElement('div');
+        el.className = 'pg-item';
+        el.dataset.index = idx;
+
+        var px = item.x + ox * TILE_W;
+        var py = item.y + oy * TILE_H;
+        el.style.setProperty('--px', px + 'px');
+        el.style.setProperty('--py', py + 'px');
+        el.style.setProperty('--s', item.scale.toFixed(2));
+        el.style.transform = 'translate(' + px + 'px, ' + py + 'px) rotate(' + item.rotation.toFixed(2) + 'deg) scale(' + item.scale.toFixed(2) + ')';
+
+        var img = document.createElement('img');
+        img.src = item.src;
+        img.alt = 'Playground piece ' + (idx + 1);
+        img.draggable = false;
+        el.appendChild(img);
+
+        fragment.appendChild(el);
+      });
+    });
+  });
+
+  world.appendChild(fragment);
+
+  // ── Preload every image before revealing the canvas, so it doesn't
+  //    pop in piece by piece while images finish loading. ──
+  var loadingEl = document.getElementById('pgLoading');
+  var MAX_WAIT = 4000; // don't block forever if one image is slow/broken
+
+  function revealCanvas() {
+    canvas.classList.add('pg-canvas-ready');
+    if (loadingEl) loadingEl.classList.add('pg-loading-hidden');
+  }
+
+  (function preload() {
+    var remaining = IMAGE_SOURCES.length;
+    var done = false;
+
+    function checkDone() {
+      remaining--;
+      if (remaining <= 0 && !done) {
+        done = true;
+        revealCanvas();
+      }
+    }
+
+    IMAGE_SOURCES.forEach(function (src) {
+      var img = new Image();
+      img.onload = checkDone;
+      img.onerror = checkDone;
+      img.src = src;
+    });
+
+    setTimeout(function () {
+      if (!done) {
+        done = true;
+        revealCanvas();
+      }
+    }, MAX_WAIT);
+  }());
+
+  // ── Pan the canvas as the cursor moves, with seamless wraparound ──
+  var panX = -TILE_W / 2;
+  var panY = -TILE_H / 2;
+  var totalMove = 0;
+  var hint = document.getElementById('pgHint');
+  var coordX = document.getElementById('pgCoordX');
+  var coordY = document.getElementById('pgCoordY');
+  var hasHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  function pad4(n) {
+    var s = String(Math.abs(Math.round(n)));
+    while (s.length < 4) s = '0' + s;
+    return (n < 0 ? '-' : '') + s;
+  }
+
+  var targetPanX = null;
+  var targetPanY = null;
+
+  function applyTransform() {
+    // Wrap the pan value so it stays bounded — seamless because the
+    // 3x3 tiles repeat identically in every direction. Keep the
+    // eased target in sync so it doesn't jump when this happens.
+    if (panX > TILE_W / 2) { panX -= TILE_W; if (targetPanX !== null) targetPanX -= TILE_W; }
+    if (panX < -TILE_W * 1.5) { panX += TILE_W; if (targetPanX !== null) targetPanX += TILE_W; }
+    if (panY > TILE_H / 2) { panY -= TILE_H; if (targetPanY !== null) targetPanY -= TILE_H; }
+    if (panY < -TILE_H * 1.5) { panY += TILE_H; if (targetPanY !== null) targetPanY += TILE_H; }
+
+    world.style.transform = 'translate3d(' + panX + 'px, ' + panY + 'px, 0)';
+  }
+
+  function updateCoords(x, y) {
+    if (coordX) coordX.textContent = pad4(x);
+    if (coordY) coordY.textContent = pad4(y);
+  }
+
+  if (hasHover) {
+    // Desktop: the canvas follows cursor motion, but eased rather
+    // than snapped — it trails slightly behind for a heavier, more
+    // fluid feel, and settles to a stop once the cursor stops.
+    if (hint) hint.textContent = 'move/drag to explore';
+
+    var lastX = null;
+    var lastY = null;
+    var SENSITIVITY = 2.5;
+    var EASE = 0.008;
+
+    targetPanX = panX;
+    targetPanY = panY;
+
+    canvas.addEventListener('mousedown', function () {
+      totalMove = 0;
+    });
+
+    canvas.addEventListener('mousemove', function (e) {
+      updateCoords(e.clientX, e.clientY);
+
+      if (lastX === null) {
+        lastX = e.clientX;
+        lastY = e.clientY;
+        return;
+      }
+      var dx = (e.clientX - lastX) * SENSITIVITY;
+      var dy = (e.clientY - lastY) * SENSITIVITY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      targetPanX += dx;
+      targetPanY += dy;
+      totalMove += Math.abs(dx) + Math.abs(dy);
+    });
+
+    canvas.addEventListener('mouseleave', function () {
+      lastX = null;
+      lastY = null;
+    });
+
+    (function easeLoop() {
+      panX += (targetPanX - panX) * EASE;
+      panY += (targetPanY - panY) * EASE;
+      applyTransform();
+      requestAnimationFrame(easeLoop);
+    }());
+  } else {
+    // Touch devices: no hover, so fall back to drag-to-pan with momentum.
+    var dragging = false;
+    var lastX = 0, lastY = 0, lastT = 0;
+    var velX = 0, velY = 0;
+    var rafId = null;
+
+    function stopInertia() {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function inertiaStep() {
+      velX *= 0.94;
+      velY *= 0.94;
+      panX += velX;
+      panY += velY;
+      applyTransform();
+      if (Math.abs(velX) > 0.05 || Math.abs(velY) > 0.05) {
+        rafId = requestAnimationFrame(inertiaStep);
+      } else {
+        rafId = null;
+      }
+    }
+
+    function pointerDown(e) {
+      stopInertia();
+      dragging = true;
+      totalMove = 0;
+      var point = e.touches ? e.touches[0] : e;
+      lastX = point.clientX;
+      lastY = point.clientY;
+      lastT = performance.now();
+      velX = 0;
+      velY = 0;
+    }
+
+    function pointerMove(e) {
+      if (!dragging) return;
+      var point = e.touches ? e.touches[0] : e;
+      updateCoords(point.clientX, point.clientY);
+
+      var dx = point.clientX - lastX;
+      var dy = point.clientY - lastY;
+      var now = performance.now();
+      var dt = Math.max(now - lastT, 1);
+
+      panX += dx;
+      panY += dy;
+      totalMove += Math.abs(dx) + Math.abs(dy);
+
+      velX = dx / dt * 16;
+      velY = dy / dt * 16;
+
+      lastX = point.clientX;
+      lastY = point.clientY;
+      lastT = now;
+
+      applyTransform();
+    }
+
+    function pointerUp() {
+      if (!dragging) return;
+      dragging = false;
+      if (Math.abs(velX) > 0.5 || Math.abs(velY) > 0.5) {
+        rafId = requestAnimationFrame(inertiaStep);
+      }
+    }
+
+    canvas.addEventListener('touchstart', pointerDown, { passive: true });
+    canvas.addEventListener('touchmove', pointerMove, { passive: true });
+    canvas.addEventListener('touchend', pointerUp);
+  }
+
+  applyTransform();
+
+  // Lets the shared lightbox click handler ignore clicks that were
+  // actually part of panning rather than a genuine tap.
+  window.__pgWasDragging = function () {
+    return totalMove > 6;
+  };
+}());
+// ── PLAYGROUND: bubble nav + filtered grid views ──
+(function () {
+  var bubbles = document.querySelectorAll('.pg-bubble-tab');
+  if (!bubbles.length) return;
+
+  var canvas = document.getElementById('pgCanvas');
+  var graphicView = document.getElementById('pgGraphicView');
+  var fineArtView = document.getElementById('pgFineArtView');
+  var body = document.body;
+
+  var graphicGrid = document.getElementById('pgGraphicGrid');
+  var fineArtGrid = document.getElementById('pgFineArtGrid');
+
+  function findSrc(folder, num) {
+    var match = null;
+    PG_IMAGE_SOURCES.forEach(function (src) {
+      if (src.indexOf('/' + folder + '/') !== -1 && src.indexOf(folder + num + '.') !== -1) {
+        match = src;
+      }
+    });
+    return match;
+  }
+
+  var FINE_ART_COLUMNS = [
+    [1, 2, 3, 6],
+    [4, 5, 12, 7],
+    [8, 9, 13, 11, 10]
+  ].map(function (nums) {
+    return nums.map(function (n) { return findSrc('fineArt', n); });
+  });
+
+  var GRAPHIC_DESIGN_COLUMNS = [
+    [1, 8, 2],
+    [3, 4, 5],
+    [7, 6]
+  ].map(function (nums) {
+    return nums.map(function (n) { return findSrc('graphicDesign', n); });
+  });
+
+  function getColumnCount() {
+    return window.innerWidth <= 700 ? 2 : 3;
+  }
+
+  // Splits a flat, ordered list into N columns as evenly as possible
+  // (round-robin), used whenever the column count doesn't match the
+  // hand-picked 3-column grouping above.
+  function distributeEvenly(flat, n) {
+    var cols = [];
+    for (var i = 0; i < n; i++) cols.push([]);
+    flat.forEach(function (src, i) {
+      cols[i % n].push(src);
+    });
+    return cols;
+  }
+
+  function buildGrid(container, threeColumnGrouping) {
+    if (!container) return;
+
+    var n = getColumnCount();
+    if (container.dataset.builtCols === String(n)) return; // already correct
+    container.dataset.builtCols = String(n);
+    container.innerHTML = '';
+
+    // Flatten the hand-picked 3-column order first — this stays the
+    // single source of truth for reading/lightbox order regardless
+    // of how many visual columns are shown.
+    var flat = [];
+    threeColumnGrouping.forEach(function (col) {
+      col.forEach(function (src) { flat.push(src); });
+    });
+
+    var columns = n === 3 ? threeColumnGrouping : distributeEvenly(flat, n);
+
+    var galleryImgs = flat.map(function (src, i) {
+      return { src: src, alt: 'Playground piece ' + (i + 1) };
+    });
+    // Map each src to its position in the flattened reading order,
+    // so the lightbox sequence stays consistent no matter which
+    // column layout is currently displayed.
+    var indexBySrc = {};
+    flat.forEach(function (src, i) { indexBySrc[src] = i; });
+
+    columns.forEach(function (col) {
+      var colEl = document.createElement('div');
+      colEl.className = 'fine-art-col';
+      container.appendChild(colEl);
+
+      col.forEach(function (src) {
+        var idx = indexBySrc[src];
+        var item = document.createElement('div');
+        item.className = 'pw-item';
+        item.dataset.index = idx;
+
+        var img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Playground piece ' + (idx + 1);
+        img.loading = 'lazy';
+
+        item.appendChild(img);
+        colEl.appendChild(item);
+
+        item.addEventListener('click', function () {
+          if (window.__openLightboxWith) window.__openLightboxWith(galleryImgs, idx);
+        });
+      });
+    });
+  }
+
+  function showView(name) {
+    bubbles.forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === name);
+    });
+
+    var isGrid = name !== 'playground';
+    body.classList.toggle('pg-grid-mode', isGrid);
+
+    if (canvas) canvas.style.visibility = isGrid ? 'hidden' : 'visible';
+    if (graphicView) graphicView.classList.toggle('active', name === 'graphic');
+    if (fineArtView) fineArtView.classList.toggle('active', name === 'fineart');
+
+    if (name === 'graphic') buildGrid(graphicGrid, GRAPHIC_DESIGN_COLUMNS);
+    if (name === 'fineart') buildGrid(fineArtGrid, FINE_ART_COLUMNS);
+  }
+
+  // Rebuild the active grid if the window crosses the 2/3-column
+  // breakpoint while open, so resizing stays evenly distributed.
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (graphicView && graphicView.classList.contains('active')) {
+        buildGrid(graphicGrid, GRAPHIC_DESIGN_COLUMNS);
+      }
+      if (fineArtView && fineArtView.classList.contains('active')) {
+        buildGrid(fineArtGrid, FINE_ART_COLUMNS);
+      }
+    }, 200);
+  });
+
+  bubbles.forEach(function (b) {
+    b.addEventListener('click', function () {
+      showView(b.dataset.view);
+    });
+  });
+}());
