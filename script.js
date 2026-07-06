@@ -968,8 +968,8 @@ var PG_IMAGE_SOURCES = [
   var rand = mulberry32(20260704);
 
   var isSmallScreen = window.innerWidth <= 700;
-  var TILE_W = isSmallScreen ? 1800 : 2200;
-  var TILE_H = isSmallScreen ? 1400 : 1500;
+  var TILE_W = isSmallScreen ? 1300 : 2200;
+  var TILE_H = isSmallScreen ? 1000 : 1500;
   var COLS = isSmallScreen ? 5 : 6;
   var ROWS = isSmallScreen ? 5 : 4;
   var CELL_W = TILE_W / COLS;
