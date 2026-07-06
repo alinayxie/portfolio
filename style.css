@@ -1748,7 +1748,7 @@ transform: scale(1.04);
 /* ── MOBILE (600px and below) ── */
 @media (max-width: 600px) {
   .hero-art {
-    width: clamp(130px, 32vw, 220px);
+    width: clamp(156px, 38vw, 264px);
   }
 
   .home-hero-content {
@@ -1790,7 +1790,7 @@ transform: scale(1.04);
 /* ── SMALL MOBILE (400px and below) ── */
 @media (max-width: 400px) {
   .hero-art {
-    width: clamp(100px, 28vw, 160px);
+    width: clamp(120px, 34vw, 192px);
   }
 
   .home-hero-content {
