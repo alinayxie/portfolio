@@ -1114,8 +1114,8 @@ var PG_IMAGE_SOURCES = [
 
     var lastX = null;
     var lastY = null;
-    var SENSITIVITY = 2.5;
-    var EASE = 0.01;
+    var SENSITIVITY = 1.2;
+    var EASE = 0.04;
 
     targetPanX = panX;
     targetPanY = panY;
