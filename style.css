@@ -1822,7 +1822,7 @@ transform: scale(1.04);
 .proj-hero {
   max-width: 1500px;
   margin: 0 auto;
-  padding: 80px 0 0 clamp(32px, calc(10vw - 70px), 90px);
+  padding: 80px clamp(32px, calc(10vw - 70px), 90px) 0;
   position: relative;
 }
 
@@ -1919,17 +1919,8 @@ transform: scale(1.04);
 .proj-section-inner {
   max-width: 1500px;
   margin: 0 auto;
-  padding: 0 0 0 clamp(32px, calc(10vw - 70px), 90px);
+  padding: 0 clamp(32px, calc(10vw - 70px), 90px);
   position: relative;
-}
-
-/* Below 1024px, the sidebar/back-link layout is off, so mirror the right
-   padding to match the fluid left padding instead of staying at 0 */
-@media (max-width: 1023px) {
-  .proj-hero,
-  .proj-section-inner {
-    padding-right: clamp(32px, calc(10vw - 70px), 90px);
-  }
 }
 
 .proj-section-inner::after {
