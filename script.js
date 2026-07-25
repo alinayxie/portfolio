@@ -880,6 +880,33 @@ document.querySelectorAll('img').forEach(function(img) {
     observer.observe(el);
   });
 }());
+// ── PROJECT INDEX SIDEBAR: highlight current section ──
+(function () {
+  var indexLinks = document.querySelectorAll('.proj-index a');
+  if (!indexLinks.length) return;
+
+  var sections = [];
+  indexLinks.forEach(function (link) {
+    var id = link.getAttribute('href').slice(1);
+    var section = document.getElementById(id);
+    if (section) sections.push(section);
+  });
+  if (!sections.length) return;
+
+  function setActive(id) {
+    indexLinks.forEach(function (link) {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+    });
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) setActive(entry.target.id);
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+
+  sections.forEach(function (section) { observer.observe(section); });
+}());
 // ── BACK LINK: track left edge of content ──
 (function () {
   var backLink = document.querySelector('.proj-back-link');
