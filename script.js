@@ -618,8 +618,9 @@ document.querySelectorAll('img').forEach(function(img) {
     '#f9f9f7',  // hero — warm off-white (also used while on Sports Excitement)
     '#f9f9f7',  // thumb 0 (Sports Excitement) — same as hero, no change yet
     '#e8e4f0',  // thumb 1 (Haddee) — soft lavender
-    '#e4ede8',  // thumb 2 (Web Art) — sage green
-    '#f0e8e4',  // thumb 3 (Playground) — dusty rose
+    '#e4ede8',  // thumb 2 (Recycling Mirage) — sage green
+    '#f0e8e4',  // thumb 2 (Creative coding) — dusty rose
+    '#f7e4f4',  // thumb 3 (Playground) — light pink
   ];
 
   function setBgColor(dotIdx) {

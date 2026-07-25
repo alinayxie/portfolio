@@ -1869,7 +1869,7 @@ transform: scale(1.04);
 }
 
 .proj-hero-sub p {
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.7;
   color: #555;
 }
@@ -2378,10 +2378,15 @@ transform: scale(1.04);
 .proj-hscroll.proj-visible .proj-hscroll-item:nth-child(3) { transition-delay: 0.19s; opacity: 1; transform: none; }
 .proj-hscroll.proj-visible .proj-hscroll-item:nth-child(4) { transition-delay: 0.26s; opacity: 1; transform: none; }
 .proj-hscroll.proj-visible .proj-hscroll-item:nth-child(5) { transition-delay: 0.33s; opacity: 1; transform: none; }
-.proj-hscroll.proj-visible .proj-hscroll-item:nth-child(6) { transition-delay: 0.40s; opacity: 1; transform: none; }
+.proj-hscroll.proj-visible .proj-hscroll-item:nth-child(n+6) { transition-delay: 0.40s; opacity: 1; transform: none; }
 /* Haddee infographic section: vertical 9:16 ratio */
 .haddee-infographic .proj-hscroll-item {
   aspect-ratio: 9 / 16 !important;
+}
+
+/* Mascot Design gallery: square 1:1 ratio */
+.mascot-gallery .proj-hscroll-item {
+  aspect-ratio: 1 / 1 !important;
 }
 /* Haddee infographic row */
 .haddee-gif-row {
@@ -2405,6 +2410,69 @@ body.haddee-body .haddee-mail .proj-hscroll-item {
   border-radius: 10px;
   overflow: hidden;
 }
+/* Proposed Mark row: static square image pair */
+.mark-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mark-img {
+  flex: 1;
+  min-width: 200px;
+  max-width: 340px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+/* Font System: small square grid-construction image, centered */
+.font-construction-wrap {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.font-construction-image {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+/* Font System: final specimen image, centered, 11:17 ratio */
+.font-image-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.font-image {
+  width: 100%;
+  max-width: 850px;
+  aspect-ratio: 17 / 11;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+/* Wayfinding Signage: square image, as large as its column allows */
+.wayfinding-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+/* Chaotic Signage: 9:12 aspect ratio */
+.wayfinding-image-chaotic {
+  width: 100%;
+  aspect-ratio: 9 / 12;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
 /* ── BACK TO PROJECTS LINK ── */
 /* Hidden below 1024px */
 .proj-back-link {
@@ -2416,9 +2484,11 @@ body.haddee-body .haddee-mail .proj-hscroll-item {
   letter-spacing: 0.12em;
 }
 
-/* At 1024px and above: pinned at a fixed spot that never moves or resizes.
-   The content column shrinks (via the width calc below) as the screen
-   narrows toward 1024px, instead of the back link shifting to make room. */
+.proj-index {
+  display: none;
+}
+
+/* At 1024px and above: pinned at a fixed spot on the right that never moves or resizes. */
 @media (min-width: 1024px) {
   .proj-back-link {
     display: block;
@@ -2433,6 +2503,30 @@ body.haddee-body .haddee-mail .proj-hscroll-item {
     transition: color 0.2s;
     z-index: 50;
     transition: letter-spacing 0.25s ease, color 0.2s;
+  }
+
+  .proj-index {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: fixed;
+    top: 130px;
+    left: 36px;
+    z-index: 50;
+  }
+
+  .proj-index a {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #888;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s, letter-spacing 0.25s ease;
+  }
+
+  .proj-index a:hover {
+    color: #111;
+    letter-spacing: 0.12em;
   }
 
   .proj-hero,
