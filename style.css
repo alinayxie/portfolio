@@ -3862,7 +3862,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .game-mode-btn { position: relative; }
+  .game-mode-btn { position: relative; top: 100px; left: 16px; padding: 8px 12px; font-size: 10px; }
   .game-hud { padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
@@ -3885,7 +3885,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; }
+  .game-mode-btn { position: relative; top: 80px; left: 12px; padding: 7px 10px; font-size: 9px; }
   .game-hud { padding: 12px 14px; }
   .game-hud-heading { font-size: 11px; }
   #gameHudLabel { font-size: 10px; }
@@ -3905,7 +3905,7 @@ body.game-mode-active { overflow: hidden; }
     resource here, not width, so compress the HUD and drop the hint
     rather than shrinking things that need to stay tappable ── */
 @media (max-height: 480px) {
-  .game-mode-btn { position: relative; }
+  .game-mode-btn { position: relative; top: 64px; padding: 6px 10px; }
   .game-hud { padding: 10px 18px; }
   .game-hud-text { gap: 2px; }
   .game-hint { display: none; }
@@ -3922,7 +3922,6 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE: simplify the HUD, hide the radar ── */
 @media (max-width: 730px) {
-  .game-mode-btn { position: relative; }
   .game-radar { display: none; }
   .game-toast { font-size: 10px; padding: 8px 16px; top: 96px; }
   .game-mute-btn { width: 28px; height: 28px; }
