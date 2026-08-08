@@ -2249,6 +2249,7 @@ transform: scale(1.04);
 
   .proj-colors {
     gap: 12px;
+    margin-bottom: 32px;
   }
 
   /* Footer stacks on mobile */
@@ -2287,6 +2288,11 @@ transform: scale(1.04);
     width: 44px;
     height: 44px;
     border-radius: 8px;
+  }
+
+  .proj-colors {
+    gap: 8px;
+    margin-bottom: 24px;
   }
 }
 /* ── SPEX PAGE INTRO ANIMATIONS ── */
@@ -3205,7 +3211,7 @@ body.pg-grid-mode .pg-coords {
   position: fixed;
   top: 84px;
   left: 24px;
-  z-index: 400;
+  z-index: 90;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3856,6 +3862,11 @@ body.game-mode-active { overflow: hidden; }
   }
 }
 
+/* Below this width the navbar's nav-links can wrap and grow taller
+   than the button's fixed top offset accounts for. Taking the button
+   out of fixed positioning here means it flows in the page normally
+   right after the navbar instead of floating at a hardcoded height,
+   so it can't overlap it regardless of how tall the navbar gets. */
 @media (max-width: 865px) {
   .game-mode-btn { position: relative; }
 }
@@ -3889,7 +3900,7 @@ body.game-mode-active { overflow: hidden; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 11px; }
   #gameHudLabel { font-size: 10px; }
-  .game-hint { font-size: 9px; top: 60px; }
+  .game-hint { font-size: 9px; top: 70px; }
   .game-character { width: 52px; height: 52px; }
   .game-portal { width: 50px; height: 50px; }
   .game-portal-label { font-size: 8px; letter-spacing: 0.04em; }
@@ -3905,7 +3916,7 @@ body.game-mode-active { overflow: hidden; }
     resource here, not width, so compress the HUD and drop the hint
     rather than shrinking things that need to stay tappable ── */
 @media (max-height: 480px) {
-  .game-mode-btn { position: relative; top: 64px; padding: 6px 10px; }
+  .game-mode-btn { position: relative; top: 80px; padding: 6px 10px; }
   .game-hud { padding: 10px 18px; }
   .game-hud-text { gap: 2px; }
   .game-hint { display: none; }
