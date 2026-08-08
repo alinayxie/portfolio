@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body class="home-body">
 
@@ -37,6 +38,12 @@
       <span></span><span></span><span></span>
     </button>
   </nav>
+
+  <!-- GAME MODE TOGGLE -->
+  <button class="game-mode-btn" id="gameModeBtn" type="button" aria-haspopup="true">
+    <span class="game-mode-btn-icon">▶</span>
+    <span class="game-mode-btn-text">GAME MODE</span>
+  </button>
 
   <!-- HERO: full viewport, background + name only -->
   <section class="home-hero" id="homeHero">
@@ -193,6 +200,54 @@
     </footer>
   </div>
 
+  <!-- GAME MODE OVERLAY -->
+  <div class="game-overlay" id="gameOverlay" aria-hidden="true">
+    <div class="game-stars" aria-hidden="true"></div>
+    <div class="game-stars-2" aria-hidden="true"></div>
+    <div class="game-grid-bg" aria-hidden="true"></div>
+    <div class="game-scanlines" aria-hidden="true"></div>
+
+    <div class="game-world" id="gameWorld">
+      <div class="game-character" id="gameCharacter">
+        <img src="images/game/character.png" alt="" class="game-character-img" id="gameCharacterImg"
+             onerror="this.classList.add('game-char-missing')">
+        <div class="game-character-fallback" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="game-hud">
+      <div class="game-hud-title">
+        <span class="game-hud-dot" aria-hidden="true"></span>
+        <span class="game-hud-text">
+          <span class="game-hud-heading">GAME MODE</span>
+          <span id="gameHudLabel">SIGNALS 0 / 8</span>
+        </span>
+      </div>
+      <div class="game-hud-right">
+        <button class="game-mute-btn" id="gameMuteBtn" type="button" aria-label="Toggle sound">
+          <img src="images/game/notMute.png" alt="" class="game-mute-icon" id="gameMuteIcon">
+        </button>
+        <button class="game-exit-btn" id="gameExitBtn" type="button">EXIT ✕</button>
+      </div>
+    </div>
+
+    <p class="game-hint">use arrow keys or the arrow pad below to move towards the portals</p>
+
+    <div class="game-radar" id="gameRadar" aria-hidden="true">
+      <div class="game-radar-self"></div>
+    </div>
+
+    <div class="game-toast" id="gameToast" aria-live="polite"></div>
+
+    <div class="game-controls" id="gameControls" aria-label="Move character">
+      <button class="game-pad-btn game-pad-up" data-dir="up" aria-label="Move up" type="button">▲</button>
+      <button class="game-pad-btn game-pad-left" data-dir="left" aria-label="Move left" type="button">◀</button>
+      <button class="game-pad-btn game-pad-right" data-dir="right" aria-label="Move right" type="button">▶</button>
+      <button class="game-pad-btn game-pad-down" data-dir="down" aria-label="Move down" type="button">▼</button>
+    </div>
+
+    <div class="game-portal-flash" id="gamePortalFlash" aria-hidden="true"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>

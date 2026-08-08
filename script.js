@@ -1410,3 +1410,564 @@ var PG_IMAGE_SOURCES = [
     });
   });
 }());
+// ══════════════════════════════════════════════
+// GAME MODE — walk a character around a glowing
+// starfield of "portals," one per home page project.
+// Hold inside a portal to warp to that project's page.
+// Collect signal shards along the way for a bit of a
+// goal, with a radar, sound, and a parallax starfield
+// to make it feel more like an actual mini-game.
+// Only runs on the home page, where these elements exist.
+// ══════════════════════════════════════════════
+(function () {
+  var toggleBtn = document.getElementById('gameModeBtn');
+  var overlay = document.getElementById('gameOverlay');
+  var world = document.getElementById('gameWorld');
+  var exitBtn = document.getElementById('gameExitBtn');
+  var muteBtn = document.getElementById('gameMuteBtn');
+  var muteIcon = document.getElementById('gameMuteIcon');
+  var characterEl = document.getElementById('gameCharacter');
+  var flashEl = document.getElementById('gamePortalFlash');
+  var controls = document.getElementById('gameControls');
+  var hudLabel = document.getElementById('gameHudLabel');
+  var radar = document.getElementById('gameRadar');
+  var toast = document.getElementById('gameToast');
+  var starsNear = overlay ? overlay.querySelector('.game-stars') : null;
+  var starsFar = overlay ? overlay.querySelector('.game-stars-2') : null;
+  if (!toggleBtn || !overlay || !world || !characterEl) return;
+
+  // Each portal/shard/radar-blip is colored from this list, cycling if
+  // there are more projects than colors.
+  var PORTAL_COLORS = ['#009fd4', '#d38900', '#1ec857', '#ff4fd8', '#a98bff'];
+
+  // Build the portal list straight from the homepage thumbnails, so
+  // game mode always matches whatever projects are on the page. Prefer
+  // the thumbnail's actual link (the real navigation target) over its
+  // data-href, in case the two ever disagree.
+  var projects = [];
+  document.querySelectorAll('.home-thumb').forEach(function (el, i) {
+    var img = el.querySelector('img');
+    var titleEl = el.querySelector('.thumb-title');
+    var link = el.querySelector('a');
+    projects.push({
+      href: (link && link.getAttribute('href')) || el.getAttribute('data-href') || '#',
+      title: titleEl ? titleEl.textContent : 'Project',
+      img: img ? img.getAttribute('src') : '',
+      color: PORTAL_COLORS[i % PORTAL_COLORS.length]
+    });
+  });
+
+  // Keep portals clear of the HUD (top) and D-pad (bottom), as
+  // percentages of the play area.
+  var PLAY_MIN_X = 14, PLAY_MAX_X = 86;
+  var PLAY_MIN_Y = 24, PLAY_MAX_Y = 78;
+
+  var portalNodes = [];
+  var shardNodes = [];
+  var SHARD_COUNT = 8;
+  var shardsCollected = 0;
+
+  function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function distance(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+  }
+
+  // ── SOUND (small synthesized blips — no audio files needed) ──
+  var audioCtx = null;
+  var isMuted = false; // always starts unmuted; toggle only affects the current visit
+
+  function updateMuteBtn() {
+    if (muteIcon) muteIcon.src = isMuted ? 'images/game/mute.png' : 'images/game/notMute.png';
+  }
+  updateMuteBtn();
+
+  function ensureAudio() {
+    if (audioCtx) return;
+    var AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtor) audioCtx = new AudioCtor();
+  }
+
+  function tone(freq, dur, type, delay, peak) {
+    if (isMuted || !audioCtx) return;
+    var t0 = audioCtx.currentTime + (delay || 0);
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peak || 0.14, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.03);
+  }
+
+  function playOpenSound() { tone(440, 0.1, 'sine', 0, 0.08); tone(660, 0.12, 'sine', 0.05, 0.08); }
+  function playCollectSound() { tone(880, 0.12, 'triangle', 0, 0.12); tone(1320, 0.14, 'triangle', 0.06, 0.1); }
+  function playChargeStartSound() { tone(240, 0.08, 'square', 0, 0.05); }
+  function playEnterSound() {
+    if (isMuted || !audioCtx) return;
+    var t0 = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, t0);
+    osc.frequency.exponentialRampToValueAtTime(1200, t0 + 0.7);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(0.12, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.75);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.8);
+  }
+
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function () {
+      isMuted = !isMuted;
+      updateMuteBtn();
+    });
+  }
+
+  // ── TOAST ──
+  var toastTimer = null;
+  function showToast(text) {
+    if (!toast) return;
+    toast.textContent = text;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('is-visible'); }, 2200);
+  }
+
+  // ── PORTALS: laid out evenly around a circle, each drifting on its
+  // own slow independent wave so the layout feels alive ──
+  function layoutPortals() {
+    world.querySelectorAll('.game-portal').forEach(function (n) { n.remove(); });
+    if (radar) radar.querySelectorAll('.game-radar-blip').forEach(function (n) { n.remove(); });
+    portalNodes = [];
+
+    var count = projects.length;
+    if (!count) return;
+
+    var centerX = (PLAY_MIN_X + PLAY_MAX_X) / 2;
+    var centerY = (PLAY_MIN_Y + PLAY_MAX_Y) / 2;
+    var radiusX = (PLAY_MAX_X - PLAY_MIN_X) / 2;
+    var radiusY = (PLAY_MAX_Y - PLAY_MIN_Y) / 2;
+
+    projects.forEach(function (project, i) {
+      var angle = -Math.PI / 2 + (i * (2 * Math.PI / count));
+      var x = centerX + Math.cos(angle) * radiusX;
+      var y = centerY + Math.sin(angle) * radiusY;
+
+      var node = document.createElement('div');
+      node.className = 'game-portal';
+      node.style.left = x + '%';
+      node.style.top = y + '%';
+      node.style.setProperty('--portal-color', project.color);
+      node.innerHTML =
+        '<div class="game-portal-charge"></div>' +
+        '<div class="game-portal-ring"></div>' +
+        '<div class="game-portal-ring game-portal-ring-2"></div>' +
+        '<div class="game-portal-thumb"><img src="' + project.img + '" alt=""></div>' +
+        '<div class="game-portal-label">' + project.title + '</div>';
+      world.appendChild(node);
+
+      var blipEl = null;
+      if (radar) {
+        blipEl = document.createElement('div');
+        blipEl.className = 'game-radar-blip';
+        blipEl.style.setProperty('--blip-color', project.color);
+        radar.appendChild(blipEl);
+      }
+
+      portalNodes.push({
+        el: node,
+        href: project.href,
+        color: project.color,
+        baseXPct: x,
+        baseYPct: y,
+        driftAmpX: 22 + Math.random() * 16,
+        driftAmpY: 22 + Math.random() * 16,
+        driftSpeedX: 0.35 + Math.random() * 0.3,
+        driftSpeedY: 0.35 + Math.random() * 0.3,
+        driftPhaseX: Math.random() * Math.PI * 2,
+        driftPhaseY: Math.random() * Math.PI * 2,
+        blip: blipEl
+      });
+    });
+  }
+
+  // Nudges every portal along its drift wave and updates its radar blip.
+  // Positions are written in px (not %) so they line up exactly with
+  // the px math collision detection uses.
+  function driftPortals(nowSeconds) {
+    var minX = worldSize.width * (PLAY_MIN_X / 100);
+    var maxX = worldSize.width * (PLAY_MAX_X / 100);
+    var minY = worldSize.height * (PLAY_MIN_Y / 100);
+    var maxY = worldSize.height * (PLAY_MAX_Y / 100);
+
+    portalNodes.forEach(function (p) {
+      if (!p.el.classList.contains('is-active')) {
+        var baseX = worldSize.width * (p.baseXPct / 100);
+        var baseY = worldSize.height * (p.baseYPct / 100);
+        var x = baseX + Math.sin(nowSeconds * p.driftSpeedX + p.driftPhaseX) * p.driftAmpX;
+        var y = baseY + Math.cos(nowSeconds * p.driftSpeedY + p.driftPhaseY) * p.driftAmpY;
+        p.el.style.left = clamp(x, minX, maxX) + 'px';
+        p.el.style.top = clamp(y, minY, maxY) + 'px';
+      }
+
+      if (p.blip) {
+        var px = p.el.offsetLeft, py = p.el.offsetTop;
+        var angle = Math.atan2(py - charY, px - charX);
+        var blipRadius = 30; // px within the 84px radar — direction only, not true distance
+        p.blip.style.left = (50 + Math.cos(angle) * blipRadius / 84 * 100) + '%';
+        p.blip.style.top = (50 + Math.sin(angle) * blipRadius / 84 * 100) + '%';
+      }
+    });
+  }
+
+  // ── COLLECTIBLE SIGNAL SHARDS ──
+  function placeShards() {
+    world.querySelectorAll('.game-shard').forEach(function (n) { n.remove(); });
+    shardNodes = [];
+    shardsCollected = 0;
+    updateHudLabel();
+
+    var placed = [];
+    for (var i = 0; i < SHARD_COUNT; i++) {
+      var x, y, tooClose, attempts = 0;
+      do {
+        x = PLAY_MIN_X + Math.random() * (PLAY_MAX_X - PLAY_MIN_X);
+        y = PLAY_MIN_Y + Math.random() * (PLAY_MAX_Y - PLAY_MIN_Y);
+        tooClose = false;
+        // Keep clear of the character's starting point (center) and of
+        // every portal's base position, so shards don't spawn on top of
+        // something else and are actually visible to walk toward.
+        if (distance(x, y, 50, 50) < 14) tooClose = true;
+        portalNodes.forEach(function (p) {
+          if (distance(x, y, p.baseXPct, p.baseYPct) < 14) tooClose = true;
+        });
+        placed.forEach(function (pos) {
+          if (distance(x, y, pos.x, pos.y) < 10) tooClose = true;
+        });
+        attempts++;
+      } while (tooClose && attempts < 30);
+
+      placed.push({ x: x, y: y });
+
+      var node = document.createElement('div');
+      node.className = 'game-shard';
+      node.style.left = x + '%';
+      node.style.top = y + '%';
+      node.style.animationDelay = (Math.random() * 1.5) + 's';
+      world.appendChild(node);
+      shardNodes.push({ el: node, collected: false });
+    }
+  }
+
+  function updateHudLabel() {
+    if (!hudLabel) return;
+    hudLabel.textContent = 'SIGNALS ' + shardsCollected + ' / ' + SHARD_COUNT;
+  }
+
+  function updateShardCollisions() {
+    for (var i = 0; i < shardNodes.length; i++) {
+      var shard = shardNodes[i];
+      if (shard.collected) continue;
+      var sx = shard.el.offsetLeft, sy = shard.el.offsetTop;
+      if (distance(charX, charY, sx, sy) < 26) {
+        shard.collected = true;
+        shard.el.classList.add('is-collected');
+        (function (el) { setTimeout(function () { el.remove(); }, 420); })(shard.el);
+        shardsCollected++;
+        updateHudLabel();
+        playCollectSound();
+        if (shardsCollected === SHARD_COUNT) {
+          showToast('ALL SIGNALS RECOVERED ⚡');
+        }
+      }
+    }
+  }
+
+  // ── CHARACTER TRAIL ──
+  var lastTrailTime = 0;
+  function spawnTrailDot() {
+    var dot = document.createElement('div');
+    dot.className = 'game-trail-dot';
+    dot.style.left = charX + 'px';
+    dot.style.top = charY + 'px';
+    world.insertBefore(dot, characterEl);
+    setTimeout(function () { dot.remove(); }, 520);
+  }
+
+  // ── CHARACTER MOVEMENT ──
+  var worldSize = { width: 0, height: 0 };
+  var charX = 0, charY = 0; // character's center, in px relative to game-world
+  var CHAR_SPEED = 260;     // px per second
+  // Read from the actual rendered element rather than hardcoding a
+  // pixel value, so shrinking the character in a mobile media query
+  // can't drift out of sync with the movement/collision math.
+  var CHAR_RADIUS = 39;
+
+  var keysDown = { up: false, down: false, left: false, right: false };
+  var rafId = null;
+  var lastFrame = 0;
+  var isTransitioning = false;
+
+  // Portal charge-to-enter: standing inside a portal briefly "charges"
+  // it (shown as a filling ring) rather than warping the instant you
+  // touch it, so entering feels like a deliberate action.
+  var chargingPortal = null;
+  var chargeStartMs = 0;
+  var CHARGE_MS = 550;
+
+  function measureWorld() {
+    var rect = world.getBoundingClientRect();
+    worldSize.width = rect.width;
+    worldSize.height = rect.height;
+    // characterEl.offsetWidth reflects whatever size the current
+    // breakpoint's CSS gives it, so this stays correct at any screen size.
+    if (characterEl.offsetWidth) CHAR_RADIUS = characterEl.offsetWidth / 2;
+  }
+
+  function resetCharacter() {
+    measureWorld();
+    charX = worldSize.width / 2;
+    charY = worldSize.height / 2;
+    renderCharacter();
+  }
+
+  function renderCharacter() {
+    characterEl.style.left = (charX - CHAR_RADIUS) + 'px';
+    characterEl.style.top = (charY - CHAR_RADIUS) + 'px';
+  }
+
+  function updateParallax() {
+    if (!starsNear && !starsFar) return;
+    var offX = -(charX - worldSize.width / 2) * 0.05;
+    var offY = -(charY - worldSize.height / 2) * 0.05;
+    if (starsFar) starsFar.style.transform = 'translate(' + (offX * 0.6) + 'px,' + (offY * 0.6) + 'px)';
+    if (starsNear) starsNear.style.transform = 'translate(' + offX + 'px,' + offY + 'px)';
+  }
+
+  function clearCharge() {
+    if (chargingPortal) {
+      chargingPortal.el.classList.remove('is-charging');
+      chargingPortal.el.style.setProperty('--charge', 0);
+    }
+    chargingPortal = null;
+  }
+
+  function updatePortalProximity(nowMs) {
+    var nearest = null;
+    var nearestDist = Infinity;
+
+    for (var i = 0; i < portalNodes.length; i++) {
+      var portal = portalNodes[i];
+      if (portal.el.classList.contains('is-active')) continue;
+      var px = portal.el.offsetLeft, py = portal.el.offsetTop;
+      var hitRadius = (portal.el.offsetWidth * 0.4) + (CHAR_RADIUS * 0.6);
+      var dist = distance(charX, charY, px, py);
+      if (dist < hitRadius && dist < nearestDist) {
+        nearest = portal;
+        nearestDist = dist;
+      }
+    }
+
+    if (nearest) {
+      if (chargingPortal !== nearest) {
+        clearCharge();
+        chargingPortal = nearest;
+        chargeStartMs = nowMs;
+        nearest.el.classList.add('is-charging');
+        playChargeStartSound();
+      }
+      var progress = clamp((nowMs - chargeStartMs) / CHARGE_MS, 0, 1);
+      nearest.el.style.setProperty('--charge', progress);
+      if (progress >= 1) enterPortal(nearest);
+    } else if (chargingPortal) {
+      clearCharge();
+    }
+  }
+
+  function step(now) {
+    if (!lastFrame) lastFrame = now;
+    // Cap the delta so a tab-switch pause doesn't fling the character.
+    var dt = Math.min((now - lastFrame) / 1000, 0.05);
+    lastFrame = now;
+
+    if (!isTransitioning) {
+      driftPortals(now / 1000);
+
+      var dx = (keysDown.right ? 1 : 0) - (keysDown.left ? 1 : 0);
+      var dy = (keysDown.down ? 1 : 0) - (keysDown.up ? 1 : 0);
+
+      if (dx || dy) {
+        // Normalize so diagonal movement isn't faster than straight movement.
+        var len = Math.sqrt(dx * dx + dy * dy);
+        dx = (dx / len) * CHAR_SPEED * dt;
+        dy = (dy / len) * CHAR_SPEED * dt;
+
+        var minX = worldSize.width * (PLAY_MIN_X / 100);
+        var maxX = worldSize.width * (PLAY_MAX_X / 100);
+        var minY = worldSize.height * (PLAY_MIN_Y / 100);
+        var maxY = worldSize.height * (PLAY_MAX_Y / 100);
+
+        charX = clamp(charX + dx, minX, maxX);
+        charY = clamp(charY + dy, minY, maxY);
+
+        characterEl.classList.add('is-moving');
+        if (dx < 0) characterEl.classList.add('face-left');
+        else if (dx > 0) characterEl.classList.remove('face-left');
+
+        renderCharacter();
+
+        if (now - lastTrailTime > 80) {
+          spawnTrailDot();
+          lastTrailTime = now;
+        }
+      } else {
+        characterEl.classList.remove('is-moving');
+      }
+
+      updateParallax();
+      updateShardCollisions();
+      updatePortalProximity(now);
+    }
+
+    rafId = requestAnimationFrame(step);
+  }
+
+  function enterPortal(portal) {
+    if (isTransitioning) return;
+    isTransitioning = true;
+
+    portal.el.classList.remove('is-charging');
+    portal.el.classList.add('is-active');
+    characterEl.classList.add('is-warping');
+    playEnterSound();
+
+    flashEl.style.setProperty('--flash-x', portal.el.style.left);
+    flashEl.style.setProperty('--flash-y', portal.el.style.top);
+    flashEl.style.setProperty('--portal-color', portal.color);
+    flashEl.classList.add('is-flashing');
+
+    setTimeout(function () {
+      window.location.href = portal.href;
+    }, 780);
+  }
+
+  // ── INPUT: KEYBOARD ──
+  var KEY_MAP = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right'
+  };
+
+  function onKeyDown(e) {
+    if (!overlay.classList.contains('is-open')) return;
+    if (e.key === 'Escape') {
+      closeGameMode();
+      return;
+    }
+    var dir = KEY_MAP[e.key];
+    if (dir) {
+      keysDown[dir] = true;
+      e.preventDefault();
+    }
+  }
+
+  function onKeyUp(e) {
+    var dir = KEY_MAP[e.key];
+    if (dir) keysDown[dir] = false;
+  }
+
+  // ── INPUT: ON-SCREEN ARROW PAD ──
+  function bindPadButton(btn) {
+    var dir = btn.dataset.dir;
+
+    function press(e) {
+      e.preventDefault();
+      keysDown[dir] = true;
+      btn.classList.add('is-pressed');
+    }
+    function release() {
+      keysDown[dir] = false;
+      btn.classList.remove('is-pressed');
+    }
+
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+    btn.addEventListener('touchend', release);
+    btn.addEventListener('touchcancel', release);
+  }
+
+  if (controls) {
+    controls.querySelectorAll('.game-pad-btn').forEach(bindPadButton);
+  }
+
+  // ── OPEN / CLOSE ──
+  function openGameMode() {
+    ensureAudio();
+    playOpenSound();
+
+    // Anchor the portal-opening transition on the button that was clicked.
+    var btnRect = toggleBtn.getBoundingClientRect();
+    overlay.style.setProperty('--origin-x', (btnRect.left + btnRect.width / 2) + 'px');
+    overlay.style.setProperty('--origin-y', (btnRect.top + btnRect.height / 2) + 'px');
+
+    layoutPortals();
+    isTransitioning = false;
+    keysDown = { up: false, down: false, left: false, right: false };
+    flashEl.classList.remove('is-flashing');
+    characterEl.classList.remove('is-warping', 'is-moving', 'face-left');
+    clearCharge();
+    if (toast) toast.classList.remove('is-visible');
+
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('game-mode-active');
+
+    requestAnimationFrame(function () {
+      resetCharacter();
+      placeShards();
+      lastFrame = 0;
+      lastTrailTime = 0;
+      if (!rafId) rafId = requestAnimationFrame(step);
+    });
+  }
+
+  function closeGameMode() {
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('game-mode-active');
+    keysDown = { up: false, down: false, left: false, right: false };
+    clearCharge();
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  toggleBtn.addEventListener('click', openGameMode);
+  if (exitBtn) exitBtn.addEventListener('click', closeGameMode);
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+
+  window.addEventListener('resize', function () {
+    if (!overlay.classList.contains('is-open')) return;
+    var oldW = worldSize.width, oldH = worldSize.height;
+    measureWorld();
+    // Keep the character's relative position stable across a resize.
+    if (oldW && oldH) {
+      charX = charX * (worldSize.width / oldW);
+      charY = charY * (worldSize.height / oldH);
+      renderCharacter();
+    }
+    layoutPortals();
+    placeShards();
+  });
+})();

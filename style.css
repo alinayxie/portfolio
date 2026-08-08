@@ -3184,3 +3184,756 @@ body.pg-grid-mode .pg-coords {
 @media (prefers-reduced-motion: reduce) {
   .pg-item { transition: none; }
 }
+/* ══════════════════════════════════════════════
+   GAME MODE
+   A dark, glowy overlay game on the home page.
+   Walk the character around with arrow keys or the
+   on-screen pad — landing on a glowing portal warps
+   you straight to that project's page.
+   ══════════════════════════════════════════════ */
+
+:root {
+  --game-bg-1: #f9f9f7;
+  --game-bg-2: #f9f9f7;
+  --game-cyan: #7ecfd4;
+  --game-magenta: #bd2f9e;
+  --game-line: rgba(126, 207, 212, 0.3);
+}
+
+/* ── TOGGLE BUTTON (top-left, below the navbar) ── */
+.game-mode-btn {
+  position: fixed;
+  top: 84px;
+  left: 24px;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f9f9f7;
+  opacity: 0.5;
+  border: 1px solid rgba(79, 243, 255, 0.5);
+  border-radius: 999px;
+  color: #555;
+  /* font-family: 'JetBrains Mono', monospace; */
+  font-size: 11px;
+  /* letter-spacing: 0.12em; */
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
+  animation: gameBtnPulse 2.6s ease-in-out infinite;
+}
+
+.game-mode-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(25, 94, 99, 0.5);
+  box-shadow: 0 0 22px rgba(79, 243, 255, 0.405);
+  opacity: 1;
+}
+
+.game-mode-btn-icon { font-size: 9px; }
+
+@keyframes gameBtnPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(79, 243, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 16px rgba(79, 243, 255, 0.55), 0 4px 16px rgba(0, 0, 0, 0.25); }
+}
+
+/* ── OVERLAY SHELL ── */
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: radial-gradient(ellipse at 50% 30%, var(--game-bg-2) 0%, var(--game-bg-1) 70%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+  touch-action: none;
+  clip-path: circle(0% at var(--origin-x, 50%) var(--origin-y, 50%));
+  transition: opacity 0.5s ease, clip-path 0.7s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0.7s;
+}
+
+.game-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  clip-path: circle(150% at var(--origin-x, 50%) var(--origin-y, 50%));
+  transition: opacity 0.5s ease, clip-path 0.7s cubic-bezier(0.65, 0, 0.35, 1), visibility 0s linear 0s;
+}
+
+body.game-mode-active { overflow: hidden; }
+
+/* ── GRID FLOOR + SCANLINES ── */
+.game-grid-bg {
+  position: absolute;
+  inset: -2px;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--game-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--game-line) 1px, transparent 1px);
+  background-size: 42px 42px;
+  animation: gameGridDrift 14s linear infinite;
+  mask-image: radial-gradient(ellipse at 50% 45%, #000 55%, transparent 92%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 55%, transparent 92%);
+}
+
+@keyframes gameGridDrift {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 42px 84px, 42px 84px; }
+}
+
+.game-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 3px);
+  opacity: 0.4;
+  animation: gameScanFlicker 6s ease-in-out infinite;
+}
+
+@keyframes gameScanFlicker {
+  0%, 92%, 100% { opacity: 0.3; }
+  94% { opacity: 0.5; }
+  96% { opacity: 0.2; }
+}
+
+/* ── HUD ── */
+.game-hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30px 40px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.game-hud-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #5bacb1;
+  text-shadow: 0 0 12px rgba(79, 243, 255, 0.6);
+}
+
+.game-hud-text {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  line-height: 1.3;
+}
+
+.game-hud-heading {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+}
+
+#gameHudLabel {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.game-hud-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--game-magenta);
+  box-shadow: 0 0 10px var(--game-magenta);
+  animation: gameDotBlink 1.4s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes gameDotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.game-exit-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #bd2f9e;
+  border-radius: 999px;
+  color: var(--game-magenta);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+  text-shadow: 0 0 15px #bd2f9e;
+}
+
+.game-exit-btn:hover {
+  border-color: var(--game-magenta);
+  box-shadow: 0 0 24px #bd2f9e;
+}
+
+.game-hint {
+  position: absolute;
+  bottom: 6vh;
+  left: 0; right: 0;
+  z-index: 5;
+  text-align: center;
+  color: #555;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 12px #7ecfd4;
+}
+
+/* ── WORLD ── */
+.game-world {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* ── PORTALS ── */
+.game-portal {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 108px;
+  height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-portal-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--portal-color, var(--game-cyan));
+  box-shadow: 0 0 24px var(--portal-color, var(--game-cyan)), inset 0 0 20px var(--portal-color, var(--game-cyan));
+  animation: gamePortalPulse 2.4s ease-in-out infinite;
+}
+
+.game-portal-ring-2 {
+  inset: 14px;
+  animation-delay: 0.5s;
+  opacity: 0.7;
+}
+
+@keyframes gamePortalPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 0.45; }
+}
+
+.game-portal-thumb {
+  position: relative;
+  width: 66%;
+  height: 66%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.game-portal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.game-portal-label {
+  position: absolute;
+  top: 100%;
+  margin-top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--portal-color, var(--game-cyan));
+  text-shadow: 0 0 10px var(--portal-color, var(--game-cyan));
+}
+
+.game-portal.is-active {
+  animation: gamePortalWarp 0.8s ease-in forwards;
+}
+
+@keyframes gamePortalWarp {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  40% { transform: translate(-50%, -50%) scale(1.6); }
+  100% { transform: translate(-50%, -50%) scale(0.05); opacity: 0; }
+}
+
+/* ── CHARACTER ── */
+.game-character {
+  position: absolute;
+  width: 78px;
+  height: 78px;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px var(--game-cyan));
+  transition: transform 0.12s ease;
+}
+
+/* Flip lives on the wrapper, not the img — the img's own transform is
+   owned by the bob animation below, and an element's transform
+   animation always overrides a plain transform rule on that same
+   element, so putting the flip here is what makes it stick. */
+.game-character.face-left {
+  transform: scaleX(-1);
+}
+
+.game-character-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  animation: gameCharBob 1.1s ease-in-out infinite;
+}
+
+.game-character.is-moving .game-character-img { animation: none; }
+
+@keyframes gameCharBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Shown only if images/character.png hasn't been added yet, so the
+   game still looks intentional rather than showing a broken image. */
+.game-character-fallback {
+  display: none;
+  position: absolute;
+  inset: 6px;
+  background: linear-gradient(135deg, var(--game-cyan), var(--game-magenta));
+  transform: rotate(45deg);
+  border-radius: 6px;
+  box-shadow: 0 0 18px var(--game-cyan);
+}
+
+.game-character-img.game-char-missing { opacity: 0; }
+.game-character-img.game-char-missing ~ .game-character-fallback { display: block; }
+
+.game-character.is-warping {
+  animation: gameCharWarp 0.8s ease-in forwards;
+}
+
+@keyframes gameCharWarp {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(0) rotate(720deg); opacity: 0; }
+}
+
+/* ── PORTAL FLASH ── */
+.game-portal-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--flash-x, 50%) var(--flash-y, 50%), #fff 0%, var(--portal-color, var(--game-cyan)) 25%, transparent 70%);
+  opacity: 0;
+}
+
+.game-portal-flash.is-flashing {
+  animation: gameFlash 0.8s ease-out forwards;
+}
+
+@keyframes gameFlash {
+  0% { opacity: 0; }
+  35% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+/* ── D-PAD CONTROLS ── */
+.game-controls {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 48px 48px 48px;
+  grid-template-rows: 48px 48px 48px;
+  grid-template-areas:
+    ".    up    ."
+    "left .     right"
+    ".    down  .";
+  gap: 6px;
+}
+
+.game-pad-btn {
+  background: #eeeff1;
+  border: 1px solid #7ecfd4;
+  border-radius: 10px;
+  color: var(--game-cyan);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s ease, background 0.2s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+}
+
+.game-pad-btn:hover,
+.game-pad-btn:active,
+.game-pad-btn.is-pressed {
+  background: rgba(79, 243, 255, 0.18);
+  box-shadow: 0 0 16px rgba(79, 243, 255, 0.55);
+  transform: scale(0.94);
+}
+
+.game-pad-up { grid-area: up; }
+.game-pad-left { grid-area: left; }
+.game-pad-down { grid-area: down; }
+.game-pad-right { grid-area: right; }
+
+/* ── STARFIELD (parallax depth layers) ── */
+.game-stars,
+.game-stars-2 {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+
+.game-stars {
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 22%, #fff, transparent 60%),
+    radial-gradient(1.2px 1.2px at 78% 8%, #fff, transparent 60%),
+    radial-gradient(1.4px 1.4px at 45% 60%, #fff, transparent 60%),
+    radial-gradient(1px 1px at 92% 48%, #fff, transparent 60%),
+    radial-gradient(1.3px 1.3px at 30% 85%, #fff, transparent 60%),
+    radial-gradient(1px 1px at 60% 30%, #fff, transparent 60%),
+    radial-gradient(1.5px 1.5px at 8% 70%, #fff, transparent 60%),
+    radial-gradient(1px 1px at 85% 80%, #fff, transparent 60%);
+  background-size: 240px 240px;
+  opacity: 0.55;
+  animation: gameStarsDrift 70s linear infinite;
+}
+
+.game-stars-2 {
+  background-image:
+    radial-gradient(1px 1px at 20% 40%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 70% 65%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 40% 10%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 90% 25%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1px 1px at 55% 90%, rgba(255, 255, 255, 0.8), transparent 60%);
+  background-size: 160px 160px;
+  opacity: 0.35;
+  animation: gameStarsDrift 45s linear infinite reverse;
+}
+
+@keyframes gameStarsDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 240px 240px; }
+}
+
+/* ── HUD: right-side button group + mute toggle ── */
+.game-hud-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.game-mute-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #7ecfd4;
+  border-radius: 50%;
+  color: var(--game-cyan);
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.game-mute-icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+}
+
+.game-mute-btn:hover {
+  border-color: var(--game-cyan);
+  box-shadow: 0 0 14px rgba(79, 243, 255, 0.5);
+}
+
+/* ── RADAR (shows the direction of every portal) ── */
+.game-radar {
+  position: absolute;
+  top: 74px;
+  right: 28px;
+  z-index: 5;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #7ecfd4;
+  background: radial-gradient(circle, #f9f9f7, #dcdddf);
+  box-shadow: 0 0 18px rgba(79, 243, 255, 0.2), inset 0 0 20px rgba(79, 243, 255, 0.08);
+}
+
+/* Tick marks around the rim, like a compass dial — a reminder that
+   this only ever shows direction, never distance. */
+.game-radar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    var(--game-cyan) 0deg 1.6deg,
+    transparent 1.6deg 30deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Faint crosshair through the center, for the same reason. */
+.game-radar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--game-cyan), var(--game-cyan)),
+    linear-gradient(var(--game-cyan), var(--game-cyan));
+  background-repeat: no-repeat;
+  background-position: center, center;
+  background-size: 100% 1px, 1px 100%;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.game-radar-self {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: var(--game-cyan);
+  box-shadow: 0 0 8px var(--game-cyan);
+}
+
+.game-radar-blip {
+  position: absolute;
+  z-index: 1;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: var(--blip-color, var(--game-cyan));
+  box-shadow: 0 0 6px var(--blip-color, var(--game-cyan));
+}
+
+/* ── TOAST (brief celebratory message) ── */
+.game-toast {
+  position: absolute;
+  top: 108px;
+  left: 50%;
+  transform: translate(-50%, -6px);
+  z-index: 7;
+  padding: 10px 20px;
+  background: rgba(192, 245, 255, 0.9);
+  border: 1px solid #5bacb1;
+  border-radius: 999px;
+  color: #555;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px #5bacb1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.game-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ── PORTAL CHARGE RING (hold inside a portal to open it) ── */
+.game-portal-charge {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: conic-gradient(var(--portal-color, var(--game-cyan)) calc(var(--charge, 0) * 360deg), transparent 0deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.game-portal.is-charging .game-portal-charge {
+  opacity: 1;
+}
+
+.game-portal.is-charging .game-portal-thumb {
+  box-shadow: 0 0 22px var(--portal-color, var(--game-cyan));
+}
+
+.game-portal.is-charging .game-portal-ring {
+  animation-duration: 0.9s;
+}
+
+/* ── COLLECTIBLE SIGNAL SHARDS ── */
+.game-shard {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, var(--game-cyan), var(--game-magenta));
+  box-shadow: 0 0 12px var(--game-cyan);
+  animation: gameShardFloat 1.8s ease-in-out infinite;
+}
+
+@keyframes gameShardFloat {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -6px; }
+}
+
+.game-shard.is-collected {
+  animation: gameShardPop 0.4s ease-out forwards;
+}
+
+@keyframes gameShardPop {
+  0% { transform: translate(-50%, -50%) rotate(45deg) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(180deg) scale(2.2); opacity: 0; }
+}
+
+/* ── CHARACTER TRAIL ── */
+.game-trail-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 50%;
+  background: #12949b;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: gameTrailFade 0.5s ease-out forwards;
+}
+
+@keyframes gameTrailFade {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+
+/* At this width the D-pad (bottom-right) starts sitting where the
+  centered hint text would otherwise land, so push the hint up top
+  with plenty of clearance under the HUD before that happens. */
+  @media (max-width: 1025px) {
+  .game-portal { width: 85px; height: 85px; }
+  .game-controls {
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+  }
+}
+
+@media (max-width: 985px) {
+  .game-portal { width: 80px; height: 80px; }
+  .game-controls {
+    grid-template-columns: 36px 36px 36px;
+    grid-template-rows: 36px 36px 36px;
+  }
+}
+
+@media (max-width: 900px) {
+  .game-hint { font-size: 11px; top: 85px; bottom: auto; }
+  .game-portal { width: 72px; height: 72px; }
+  .game-controls {
+    bottom: 18px;
+    right: 50%;
+    transform: translateX(50%);
+    grid-template-columns: 32px 32px 32px;
+    grid-template-rows: 32px 32px 32px;
+  }
+}
+
+/* ── MOBILE ── */
+@media (max-width: 700px) {
+  .game-mode-btn { top: 70px; left: 16px; padding: 8px 12px; font-size: 10px; }
+  .game-hud { padding: 16px 18px; }
+  .game-hud-heading { font-size: 12px; }
+  #gameHudLabel { font-size: 11px; }
+  .game-exit-btn { padding: 6px 12px; font-size: 10px; }
+  /* The D-pad is centered on mobile, which would sit directly under
+      the hint if it kept the desktop's bottom position — so on small
+      screens the hint moves up under the HUD instead. */
+  .game-hint { font-size: 10px; top: 65px; bottom: auto; padding: 0 16px; }
+  .game-character { width: 60px; height: 60px; }
+  .game-portal { width: 65px; height: 65px; }
+  .game-portal-label { font-size: 9px; }
+  .game-controls {
+    bottom: 18px;
+    right: 50%;
+    transform: translateX(50%);
+    grid-template-columns: 32px 32px 32px;
+    grid-template-rows: 32px 32px 32px;
+  }
+}
+
+/* ── SMALL PHONES ── */
+@media (max-width: 400px) {
+  .game-mode-btn { top: 66px; left: 12px; padding: 7px 10px; font-size: 9px; }
+  .game-hud { padding: 12px 14px; }
+  .game-hud-heading { font-size: 11px; }
+  #gameHudLabel { font-size: 10px; }
+  .game-hint { font-size: 9px; top: 50px; }
+  .game-character { width: 52px; height: 52px; }
+  .game-portal { width: 50px; height: 50px; }
+  .game-portal-label { font-size: 8px; letter-spacing: 0.04em; }
+  .game-controls {
+    bottom: 14px;
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 28px 28px 28px;
+    gap: 5px;
+  }
+}
+
+/* ── SHORT / LANDSCAPE VIEWPORTS: vertical space is the scarce
+    resource here, not width, so compress the HUD and drop the hint
+    rather than shrinking things that need to stay tappable ── */
+@media (max-height: 480px) {
+  .game-mode-btn { top: 64px; padding: 6px 10px; }
+  .game-hud { padding: 10px 18px; }
+  .game-hud-text { gap: 2px; }
+  .game-hint { display: none; }
+  .game-character { width: 52px; height: 52px; }
+  .game-portal { width: 52px; height: 52px; }
+  .game-controls {
+    bottom: 10px;
+    grid-template-columns: 28px 28px 28px;
+    grid-template-rows: 28px 28px 28px;
+    gap: 5px;
+  }
+  .game-radar { top: 56px; width: 68px; height: 68px; }
+}
+
+/* ── MOBILE: simplify the HUD, hide the radar ── */
+@media (max-width: 730px) {
+  .game-radar { display: none; }
+  .game-toast { font-size: 10px; padding: 8px 16px; top: 96px; }
+  .game-mute-btn { width: 28px; height: 28px; }
+  .game-mute-icon { width: 14px; height: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-grid-bg,
+  .game-scanlines,
+  .game-mode-btn,
+  .game-hud-dot,
+  .game-portal-ring,
+  .game-character-img,
+  .game-stars,
+  .game-stars-2,
+  .game-shard {
+    animation: none !important;
+  }
+}
