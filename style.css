@@ -3863,14 +3863,14 @@ body.game-mode-active { overflow: hidden; }
 /* ── MOBILE ── */
 @media (max-width: 700px) {
   .game-mode-btn { position: relative; top: 100px; left: 16px; padding: 8px 12px; font-size: 10px; }
-  .game-hud { padding: 16px 18px; }
+  .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
   .game-exit-btn { padding: 6px 12px; font-size: 10px; }
   /* The D-pad is centered on mobile, which would sit directly under
       the hint if it kept the desktop's bottom position — so on small
       screens the hint moves up under the HUD instead. */
-  .game-hint { font-size: 10px; top: 65px; bottom: auto; padding: 0 16px; }
+  .game-hint { font-size: 10px; top: 85px; bottom: auto; padding: 0 16px; }
   .game-character { width: 60px; height: 60px; }
   .game-portal { width: 65px; height: 65px; }
   .game-portal-label { font-size: 9px; }
@@ -3886,17 +3886,17 @@ body.game-mode-active { overflow: hidden; }
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
   .game-mode-btn { position: relative; top: 80px; left: 12px; padding: 7px 10px; font-size: 9px; }
-  .game-hud { padding: 12px 14px; }
+  .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 11px; }
   #gameHudLabel { font-size: 10px; }
-  .game-hint { font-size: 9px; top: 50px; }
+  .game-hint { font-size: 9px; top: 60px; }
   .game-character { width: 52px; height: 52px; }
   .game-portal { width: 50px; height: 50px; }
   .game-portal-label { font-size: 8px; letter-spacing: 0.04em; }
   .game-controls {
     bottom: 14px;
-    grid-template-columns: 40px 40px 40px;
-    grid-template-rows: 28px 28px 28px;
+    grid-template-columns: 30px 30px 30px;
+    grid-template-rows: 30px 30px 30px;
     gap: 5px;
   }
 }
