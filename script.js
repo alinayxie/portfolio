@@ -1415,8 +1415,8 @@ var PG_IMAGE_SOURCES = [
 // starfield of "portals," one per home page project.
 // Hold inside a portal to warp to that project's page.
 // Collect signal shards along the way for a bit of a
-// goal, with a radar, sound, and a parallax starfield
-// to make it feel more like an actual mini-game.
+// goal, with sound and a parallax starfield to make it
+// feel more like an actual mini-game.
 // Only runs on the home page, where these elements exist.
 // ══════════════════════════════════════════════
 (function () {
@@ -1430,13 +1430,12 @@ var PG_IMAGE_SOURCES = [
   var flashEl = document.getElementById('gamePortalFlash');
   var controls = document.getElementById('gameControls');
   var hudLabel = document.getElementById('gameHudLabel');
-  var radar = document.getElementById('gameRadar');
   var toast = document.getElementById('gameToast');
   var starsNear = overlay ? overlay.querySelector('.game-stars') : null;
   var starsFar = overlay ? overlay.querySelector('.game-stars-2') : null;
   if (!toggleBtn || !overlay || !world || !characterEl) return;
 
-  // Each portal/shard/radar-blip is colored from this list, cycling if
+  // Each portal/shard is colored from this list, cycling if
   // there are more projects than colors.
   var PORTAL_COLORS = ['#009fd4', '#d38900', '#1ec857', '#ff4fd8', '#a98bff'];
 
@@ -1545,7 +1544,6 @@ var PG_IMAGE_SOURCES = [
   // own slow independent wave so the layout feels alive ──
   function layoutPortals() {
     world.querySelectorAll('.game-portal').forEach(function (n) { n.remove(); });
-    if (radar) radar.querySelectorAll('.game-radar-blip').forEach(function (n) { n.remove(); });
     portalNodes = [];
 
     var count = projects.length;
@@ -1574,14 +1572,6 @@ var PG_IMAGE_SOURCES = [
         '<div class="game-portal-label">' + project.title + '</div>';
       world.appendChild(node);
 
-      var blipEl = null;
-      if (radar) {
-        blipEl = document.createElement('div');
-        blipEl.className = 'game-radar-blip';
-        blipEl.style.setProperty('--blip-color', project.color);
-        radar.appendChild(blipEl);
-      }
-
       portalNodes.push({
         el: node,
         href: project.href,
@@ -1593,15 +1583,14 @@ var PG_IMAGE_SOURCES = [
         driftSpeedX: 0.35 + Math.random() * 0.3,
         driftSpeedY: 0.35 + Math.random() * 0.3,
         driftPhaseX: Math.random() * Math.PI * 2,
-        driftPhaseY: Math.random() * Math.PI * 2,
-        blip: blipEl
+        driftPhaseY: Math.random() * Math.PI * 2
       });
     });
   }
 
-  // Nudges every portal along its drift wave and updates its radar blip.
-  // Positions are written in px (not %) so they line up exactly with
-  // the px math collision detection uses.
+  // Nudges every portal along its drift wave. Positions are written in
+  // px (not %) so they line up exactly with the px math collision
+  // detection uses.
   function driftPortals(nowSeconds) {
     var minX = worldSize.width * (PLAY_MIN_X / 100);
     var maxX = worldSize.width * (PLAY_MAX_X / 100);
@@ -1609,22 +1598,13 @@ var PG_IMAGE_SOURCES = [
     var maxY = worldSize.height * (PLAY_MAX_Y / 100);
 
     portalNodes.forEach(function (p) {
-      if (!p.el.classList.contains('is-active')) {
-        var baseX = worldSize.width * (p.baseXPct / 100);
-        var baseY = worldSize.height * (p.baseYPct / 100);
-        var x = baseX + Math.sin(nowSeconds * p.driftSpeedX + p.driftPhaseX) * p.driftAmpX;
-        var y = baseY + Math.cos(nowSeconds * p.driftSpeedY + p.driftPhaseY) * p.driftAmpY;
-        p.el.style.left = clamp(x, minX, maxX) + 'px';
-        p.el.style.top = clamp(y, minY, maxY) + 'px';
-      }
-
-      if (p.blip) {
-        var px = p.el.offsetLeft, py = p.el.offsetTop;
-        var angle = Math.atan2(py - charY, px - charX);
-        var blipRadius = 30; // px within the 84px radar — direction only, not true distance
-        p.blip.style.left = (50 + Math.cos(angle) * blipRadius / 84 * 100) + '%';
-        p.blip.style.top = (50 + Math.sin(angle) * blipRadius / 84 * 100) + '%';
-      }
+      if (p.el.classList.contains('is-active')) return;
+      var baseX = worldSize.width * (p.baseXPct / 100);
+      var baseY = worldSize.height * (p.baseYPct / 100);
+      var x = baseX + Math.sin(nowSeconds * p.driftSpeedX + p.driftPhaseX) * p.driftAmpX;
+      var y = baseY + Math.cos(nowSeconds * p.driftSpeedY + p.driftPhaseY) * p.driftAmpY;
+      p.el.style.left = clamp(x, minX, maxX) + 'px';
+      p.el.style.top = clamp(y, minY, maxY) + 'px';
     });
   }
 
@@ -1884,17 +1864,41 @@ var PG_IMAGE_SOURCES = [
   }
 
   // ── INPUT: ON-SCREEN ARROW PAD ──
+  // A single tap/click moves a fixed step (this is what a keyboard
+  // Enter/Space press or a screen reader's "activate" gesture actually
+  // fires — neither produces a mousedown/touchstart, so without this
+  // the pad would be completely unusable without a mouse or finger).
+  // Holding it down (real touch or mouse) still moves continuously via
+  // the main loop, same as before.
+  var STEP_PX = 46;
+
+  function stepInDirection(dir) {
+    var minX = worldSize.width * (PLAY_MIN_X / 100);
+    var maxX = worldSize.width * (PLAY_MAX_X / 100);
+    var minY = worldSize.height * (PLAY_MIN_Y / 100);
+    var maxY = worldSize.height * (PLAY_MAX_Y / 100);
+
+    if (dir === 'up') charY = clamp(charY - STEP_PX, minY, maxY);
+    else if (dir === 'down') charY = clamp(charY + STEP_PX, minY, maxY);
+    else if (dir === 'left') charX = clamp(charX - STEP_PX, minX, maxX);
+    else if (dir === 'right') charX = clamp(charX + STEP_PX, minX, maxX);
+
+    renderCharacter();
+  }
+
   function bindPadButton(btn) {
     var dir = btn.dataset.dir;
 
     function press(e) {
-      e.preventDefault();
+      e.preventDefault(); // also suppresses the synthetic click a real touch would otherwise fire
       keysDown[dir] = true;
       btn.classList.add('is-pressed');
+      btn.setAttribute('aria-pressed', 'true');
     }
     function release() {
       keysDown[dir] = false;
       btn.classList.remove('is-pressed');
+      btn.setAttribute('aria-pressed', 'false');
     }
 
     btn.addEventListener('mousedown', press);
@@ -1903,11 +1907,32 @@ var PG_IMAGE_SOURCES = [
     btn.addEventListener('mouseleave', release);
     btn.addEventListener('touchend', release);
     btn.addEventListener('touchcancel', release);
+    // Fires for keyboard activation and screen readers; harmless no-op
+    // extra nudge for a quick real click, since press() already
+    // suppressed the touch case above.
+    btn.addEventListener('click', function () { stepInDirection(dir); });
   }
 
   if (controls) {
     controls.querySelectorAll('.game-pad-btn').forEach(bindPadButton);
   }
+
+  // Safety net: if a press event's matching release never arrives —
+  // the tab loses focus, an app switch interrupts a touch, etc. — the
+  // character could otherwise get stuck moving indefinitely.
+  function releaseAllDirections() {
+    keysDown = { up: false, down: false, left: false, right: false };
+    if (controls) {
+      controls.querySelectorAll('.game-pad-btn').forEach(function (b) {
+        b.classList.remove('is-pressed');
+        b.setAttribute('aria-pressed', 'false');
+      });
+    }
+  }
+  window.addEventListener('blur', releaseAllDirections);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) releaseAllDirections();
+  });
 
   // ── OPEN / CLOSE ──
   function openGameMode() {

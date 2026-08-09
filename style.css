@@ -3586,6 +3586,11 @@ body.game-mode-active { overflow: hidden; }
   transform: scale(0.94);
 }
 
+.game-pad-btn:focus-visible {
+  outline: 2px solid var(--game-cyan);
+  outline-offset: 2px;
+}
+
 .game-pad-up { grid-area: up; }
 .game-pad-left { grid-area: left; }
 .game-pad-down { grid-area: down; }
@@ -3664,77 +3669,6 @@ body.game-mode-active { overflow: hidden; }
 .game-mute-btn:hover {
   border-color: var(--game-cyan);
   box-shadow: 0 0 14px rgba(79, 243, 255, 0.5);
-}
-
-/* ── RADAR (shows the direction of every portal) ── */
-.game-radar {
-  position: absolute;
-  top: 74px;
-  right: 28px;
-  z-index: 5;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1px solid #7ecfd4;
-  background: radial-gradient(circle, #f9f9f7, #dcdddf);
-  box-shadow: 0 0 18px rgba(79, 243, 255, 0.2), inset 0 0 20px rgba(79, 243, 255, 0.08);
-}
-
-/* Tick marks around the rim, like a compass dial — a reminder that
-   this only ever shows direction, never distance. */
-.game-radar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: repeating-conic-gradient(
-    var(--game-cyan) 0deg 1.6deg,
-    transparent 1.6deg 30deg
-  );
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* Faint crosshair through the center, for the same reason. */
-.game-radar::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--game-cyan), var(--game-cyan)),
-    linear-gradient(var(--game-cyan), var(--game-cyan));
-  background-repeat: no-repeat;
-  background-position: center, center;
-  background-size: 100% 1px, 1px 100%;
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-.game-radar-self {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 1;
-  width: 6px;
-  height: 6px;
-  margin: -3px;
-  border-radius: 50%;
-  background: var(--game-cyan);
-  box-shadow: 0 0 8px var(--game-cyan);
-}
-
-.game-radar-blip {
-  position: absolute;
-  z-index: 1;
-  width: 6px;
-  height: 6px;
-  margin: -3px;
-  border-radius: 50%;
-  background: var(--blip-color, var(--game-cyan));
-  box-shadow: 0 0 6px var(--blip-color, var(--game-cyan));
 }
 
 /* ── TOAST (brief celebratory message) ── */
@@ -3837,16 +3771,16 @@ body.game-mode-active { overflow: hidden; }
   @media (max-width: 1025px) {
   .game-portal { width: 85px; height: 85px; }
   .game-controls {
-    grid-template-columns: 40px 40px 40px;
-    grid-template-rows: 40px 40px 40px;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
   }
 }
 
 @media (max-width: 985px) {
   .game-portal { width: 80px; height: 80px; }
   .game-controls {
-    grid-template-columns: 36px 36px 36px;
-    grid-template-rows: 36px 36px 36px;
+    grid-template-columns: 42px 42px 42px;
+    grid-template-rows: 42px 42px 42px;
   }
 }
 
@@ -3857,8 +3791,8 @@ body.game-mode-active { overflow: hidden; }
     bottom: 18px;
     right: 50%;
     transform: translateX(50%);
-    grid-template-columns: 32px 32px 32px;
-    grid-template-rows: 32px 32px 32px;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
   }
 }
 
@@ -3889,8 +3823,8 @@ body.game-mode-active { overflow: hidden; }
     bottom: 18px;
     right: 50%;
     transform: translateX(50%);
-    grid-template-columns: 32px 32px 32px;
-    grid-template-rows: 32px 32px 32px;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
   }
 }
 
@@ -3906,9 +3840,9 @@ body.game-mode-active { overflow: hidden; }
   .game-portal-label { font-size: 8px; letter-spacing: 0.04em; }
   .game-controls {
     bottom: 14px;
-    grid-template-columns: 30px 30px 30px;
-    grid-template-rows: 30px 30px 30px;
-    gap: 5px;
+    grid-template-columns: 42px 42px 42px;
+    grid-template-rows: 42px 42px 42px;
+    gap: 6px;
   }
 }
 
@@ -3924,16 +3858,14 @@ body.game-mode-active { overflow: hidden; }
   .game-portal { width: 52px; height: 52px; }
   .game-controls {
     bottom: 10px;
-    grid-template-columns: 28px 28px 28px;
-    grid-template-rows: 28px 28px 28px;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
     gap: 5px;
   }
-  .game-radar { top: 56px; width: 68px; height: 68px; }
 }
 
-/* ── MOBILE: simplify the HUD, hide the radar ── */
+/* ── MOBILE: simplify the HUD ── */
 @media (max-width: 730px) {
-  .game-radar { display: none; }
   .game-toast { font-size: 10px; padding: 8px 16px; top: 96px; }
   .game-mute-btn { width: 28px; height: 28px; }
   .game-mute-icon { width: 14px; height: 14px; }

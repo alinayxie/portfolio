@@ -233,17 +233,13 @@
 
     <p class="game-hint">use arrow keys or the arrow pad below to move towards the portals</p>
 
-    <div class="game-radar" id="gameRadar" aria-hidden="true">
-      <div class="game-radar-self"></div>
-    </div>
-
     <div class="game-toast" id="gameToast" aria-live="polite"></div>
 
-    <div class="game-controls" id="gameControls" aria-label="Move character">
-      <button class="game-pad-btn game-pad-up" data-dir="up" aria-label="Move up" type="button">▲</button>
-      <button class="game-pad-btn game-pad-left" data-dir="left" aria-label="Move left" type="button">◀</button>
-      <button class="game-pad-btn game-pad-right" data-dir="right" aria-label="Move right" type="button">▶</button>
-      <button class="game-pad-btn game-pad-down" data-dir="down" aria-label="Move down" type="button">▼</button>
+    <div class="game-controls" id="gameControls" role="group" aria-label="Move character">
+      <button class="game-pad-btn game-pad-up" data-dir="up" aria-label="Move up" aria-pressed="false" type="button">▲</button>
+      <button class="game-pad-btn game-pad-left" data-dir="left" aria-label="Move left" aria-pressed="false" type="button">◀</button>
+      <button class="game-pad-btn game-pad-right" data-dir="right" aria-label="Move right" aria-pressed="false" type="button">▶</button>
+      <button class="game-pad-btn game-pad-down" data-dir="down" aria-label="Move down" aria-pressed="false" type="button">▼</button>
     </div>
 
     <div class="game-portal-flash" id="gamePortalFlash" aria-hidden="true"></div>
