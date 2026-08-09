@@ -1565,6 +1565,7 @@ var PG_IMAGE_SOURCES = [
       node.style.top = y + '%';
       node.style.setProperty('--portal-color', project.color);
       node.innerHTML =
+        '<div class="game-portal-backing"></div>' +
         '<div class="game-portal-charge"></div>' +
         '<div class="game-portal-ring"></div>' +
         '<div class="game-portal-ring game-portal-ring-2"></div>' +

@@ -1781,6 +1781,7 @@ transform: scale(1.04);
   .home-thumb > a {
     height: 64vw !important;
     max-height: 360px !important;
+    margin-top: 15px;
   }
 
   .thumb-title {
@@ -1809,6 +1810,7 @@ transform: scale(1.04);
 
   .home-thumb > a {
     height: 72vw !important;
+    margin-top: 8px;
   }
 }
 /* ── SPORTSEXCITEMENT REDESIGN ── */
@@ -3406,6 +3408,13 @@ body.game-mode-active { overflow: hidden; }
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.game-portal-backing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--game-bg-1);
 }
 
 .game-portal-ring {
