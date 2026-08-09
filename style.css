@@ -3841,8 +3841,8 @@ body.game-mode-active { overflow: hidden; }
 @media (max-width: 400px) {
   .game-mode-btn { position: relative; top: 80px; left: 12px; padding: 7px 10px; font-size: 9px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
-  .game-hud-heading { font-size: 11px; }
-  #gameHudLabel { font-size: 10px; }
+  .game-hud-heading { font-size: 12px; }
+  #gameHudLabel { font-size: 11px; margin-top: 5px;}
   .game-hint { font-size: 9px; top: 70px; }
   .game-character { width: 52px; height: 52px; }
   .game-portal { width: 50px; height: 50px; }
