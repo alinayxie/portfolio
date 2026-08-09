@@ -3820,7 +3820,7 @@ body.game-mode-active { overflow: hidden; }
   .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
-  .game-exit-btn { padding: 6px 12px; font-size: 10px; }
+  /* .game-exit-btn { padding: 8px 14px; font-size: 11px; } */
   /* The D-pad is centered on mobile, which would sit directly under
       the hint if it kept the desktop's bottom position — so on small
       screens the hint moves up under the HUD instead. */
@@ -3875,9 +3875,9 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE: simplify the HUD ── */
 @media (max-width: 730px) {
-  .game-toast { font-size: 10px; padding: 8px 16px; top: 96px; }
-  .game-mute-btn { width: 28px; height: 28px; }
-  .game-mute-icon { width: 14px; height: 14px; }
+  .game-toast { font-size: 10px; padding: 8px 16px; top: 125px; }
+  /* .game-mute-btn { width: 28px; height: 28px; }
+  .game-mute-icon { width: 14px; height: 14px; } */
 }
 
 @media (prefers-reduced-motion: reduce) {
