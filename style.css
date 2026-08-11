@@ -3210,7 +3210,7 @@ body.pg-grid-mode .pg-coords {
 
 /* ── TOGGLE BUTTON (top-left, below the navbar) ── */
 .game-mode-btn {
-  position: fixed;
+  position: relative;
   top: 84px;
   left: 24px;
   z-index: 90;
