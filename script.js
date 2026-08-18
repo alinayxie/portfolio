@@ -2020,12 +2020,15 @@ var PG_IMAGE_SOURCES = [
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) return;
 
-  // Below 860px the vertical composition (homeHeroVertical.svg) is the one
-  // CSS actually shows — see the matching media query in style.css — so
-  // that's the one this module should animate. Above it, the horizontal
-  // composition stays exactly as it was.
-  var isNarrow = window.innerWidth <= 860;
-  var heroSvg = document.querySelector(isNarrow ? '.hero-svg-vertical' : '.hero-svg-horizontal');
+  // Ask the DOM which composition CSS is actually showing, rather than
+  // duplicating the breakpoint's pixel value here — CSS's media query is
+  // the single source of truth, so this can't drift out of sync with it
+  // (which is exactly what happened when that breakpoint got retuned and
+  // this hardcoded number didn't follow).
+  var horizEl = document.querySelector('.hero-svg-horizontal');
+  var vertEl  = document.querySelector('.hero-svg-vertical');
+  var isNarrow = !!(vertEl && getComputedStyle(vertEl).display !== 'none');
+  var heroSvg = isNarrow ? vertEl : horizEl;
   if (!heroSvg) return;
 
   var MAX_SCALE  = 2.6;  // how large the artwork grows by the end
