@@ -16,7 +16,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #fff;
+  background: #f3fef6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -41,6 +41,7 @@ body {
   color: #222;
   font-size: 14px;
   letter-spacing: 0.04em;
+  font-weight: 400;
   transition: color 0.2s;
 }
 
@@ -208,7 +209,7 @@ body {
 
 /* FOOTER */
 .footer {
-  max-width: 1080px;
+  /* max-width: 1080px; */
   margin: 0 auto;
   padding: 40px 48px;
   display: flex;
@@ -217,9 +218,11 @@ body {
   gap: 24px;
   position: relative;
   z-index: 1;
+  background: #f3fdfe;
 }
 
 .footer-left {
+  margin-left: 56px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -256,6 +259,7 @@ body {
 
 .footer-right {
   display: flex;
+  margin-right: 56px;
   align-items: center;
   gap: 16px;
 }
@@ -326,6 +330,9 @@ body {
 
   .cards {
     gap: 32px;
+  }
+  .footer-right {
+    margin-left: 56px;
   }
 }
 
@@ -1137,7 +1144,7 @@ transform: scale(1.04);
   left: 0;
   right: 0;
   z-index: 200;
-  background: rgba(255,255,255,0.92);
+  background: #f3fdfe;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -1176,10 +1183,12 @@ transform: scale(1.04);
 
 .slide-title {
   font-family: 'DM Sans', sans-serif;
-  font-weight: bold;
-  font-size: clamp(2.8rem, 4vw, 4.5rem);
+  /* font-weight: 200; */
+  font-size: clamp(3rem, 4.2vw, 4.7rem);
+  /* font-size: 60px; */
   line-height: 1.05;
   letter-spacing: -0.02em;
+  /* letter-spacing: -0.085em; */
   color: #111;
   margin-bottom: 0.7em;
 }
@@ -1315,7 +1324,7 @@ transform: scale(1.04);
 }
 
 .dot.active {
-  background: #222;
+  background: #78c193;
   height: 16px;
   border-radius: 2px;
 }
@@ -1355,6 +1364,7 @@ transform: scale(1.04);
   justify-content: center;
   overflow: hidden;
   z-index: 1;
+  background-color: #f3fdfe;
 }
 
 .home-hero-bg {
@@ -1406,6 +1416,461 @@ transform: scale(1.04);
 
 .hero-art-right {
   /* rotation managed by JS */
+}
+
+/* ── HERO SVG (heroHome.svg, inlined) ── */
+/* Two variants live in the DOM at once — .hero-svg-horizontal for normal
+   widths, .hero-svg-vertical (homeHeroVertical.svg) once the screen
+   narrows past 860px — and the media query below shows exactly one.
+   Both share sizing/animation plumbing via the common .hero-svg class;
+   script.js picks whichever is visible and runs the same pin/entrance/
+   break-apart system against it. */
+
+.hero-svg {
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  flex-shrink: 0;      /* don't let flex shrink it back down once it's
+                           intentionally wider than the viewport */
+}
+
+.hero-svg-vertical {
+  display: none;
+}
+
+@media (max-width: 750px) {
+  .hero-svg-horizontal { display: none; }
+  .hero-svg-vertical    { display: block; }
+}
+
+.hero-svg-horizontal {
+  width: 80%;                                        /* fallback for browsers without min()/max() */
+  max-width: 1520px;
+  width: min(max(80vw, 80vh), 105vw, 1520px);         /* grows via height on tall/narrow viewports;
+                                                          105vw ceiling caps how far it can spill past
+                                                          the viewport edges so the name text never gets
+                                                          cropped, since .home-hero clips the overflow */
+}
+
+.hero-svg-vertical {
+  width: 92%;                                          /* fallback for browsers without min()/max() */
+  max-width: 800px;
+  width: min(92vw, 66.7vh, 800px);                      /* portrait 2:3 artwork — width is almost always
+                                                            the binding constraint on real phone screens,
+                                                            since phones run narrower than 2:3 already */
+}
+
+.hero-svg > * {
+  transform-box: fill-box;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* -- slide in from the left -- */
+#greenRectangle    { animation: heroSlideInGreenRectangle    1.4s  0s     both; }
+#blueRectangleLeft { animation: heroSlideInBlueRectangleLeft 1.4s  0.13s  both; }
+#grainLeft          { animation: heroSlideInGrainLeft         1.45s 0.45s  both; }
+#heroArtLeft         { animation: heroSlideInHeroArtLeft        1.45s 0.64s  both; }
+#alina               { animation: heroSlideInAlina              1.3s  1.36s  both; }
+
+/* -- slide in from the right -- */
+#blueRectangleRight { animation: heroSlideInBlueRectangleRight 1.4s  0.22s both; }
+#pinkRectangle       { animation: heroSlideInPinkRectangle      1.4s  0.32s both; }
+#grainRight           { animation: heroSlideInGrainRight          1.45s 0.54s both; }
+#heroArtRight         { animation: heroSlideInHeroArtRight        1.45s 0.74s both; }
+#xie                  { animation: heroSlideInXie                 1.3s  1.47s both; }
+#subText              { animation: heroSlideInSubText              1.2s  1.66s both; }
+
+/* -- twisting entrances -- */
+#checkered           { animation: heroTwistInCheckered  1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 0.83s both; }
+#blueLongRectangle    { animation: heroTwistInLongRect    1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 1s   both; }
+#greenStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.12s both; }
+#blueStar              { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.23s both; }
+#whileStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.34s both; }
+
+/* -- when scrolled 40% past: everything continues its entrance arc outward, mirrored to the opposite side -- */
+.hero-svg.is-exiting #greenRectangle    { animation: heroFluidOutGreenRectangle    1s   cubic-bezier(0.16, 1, 0.3, 1) 0s    both; }
+.hero-svg.is-exiting #blueRectangleLeft { animation: heroFluidOutBlueRectangleLeft 1s   cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.hero-svg.is-exiting #grainLeft          { animation: heroFluidOutGrainLeft         0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
+.hero-svg.is-exiting #heroArtLeft         { animation: heroFluidOutHeroArtLeft        0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.hero-svg.is-exiting #alina               { animation: heroFluidOutAlina              0.9s  cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+.hero-svg.is-exiting #blueRectangleRight { animation: heroFluidOutBlueRectangleRight 1s   cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.hero-svg.is-exiting #pinkRectangle       { animation: heroFluidOutPinkRectangle      1s   cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
+.hero-svg.is-exiting #grainRight           { animation: heroFluidOutGrainRight          0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both; }
+.hero-svg.is-exiting #heroArtRight         { animation: heroFluidOutHeroArtRight        0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+.hero-svg.is-exiting #xie                  { animation: heroFluidOutXie                 0.9s  cubic-bezier(0.16, 1, 0.3, 1) 0.46s both; }
+.hero-svg.is-exiting #subText              { animation: heroFluidOutSubText              0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.5s  both; }
+.hero-svg.is-exiting #checkered           { animation: heroFluidOutCheckered  0.9s cubic-bezier(0.3, 1.15, 0.5, 1) 0.3s  both; }
+.hero-svg.is-exiting #blueLongRectangle    { animation: heroFluidOutLongRect    0.85s cubic-bezier(0.3, 1.15, 0.5, 1) 0.35s both; }
+.hero-svg.is-exiting #greenStar             { animation: heroFluidOutStar        0.8s  cubic-bezier(0.3, 1.15, 0.5, 1) 0.4s  both; }
+.hero-svg.is-exiting #blueStar              { animation: heroFluidOutStar        0.8s  cubic-bezier(0.3, 1.15, 0.5, 1) 0.44s both; }
+.hero-svg.is-exiting #whileStar             { animation: heroFluidOutStar        0.8s  cubic-bezier(0.3, 1.15, 0.5, 1) 0.48s both; }
+
+@keyframes heroSlideInGreenRectangle {
+  0%   { opacity: 0; transform: translate(-420px, 36.08px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-20.7px, 36.08px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInBlueRectangleLeft {
+  0%   { opacity: 0; transform: translate(-440px, 31.04px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-45.31px, 31.04px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInGrainLeft {
+  0%   { opacity: 0; transform: translate(-160px, 1.18px) scale(0.32); }
+  100% { opacity: 1; transform: translate(2px, 1.18px) scale(0.32); }
+}
+@keyframes heroSlideInHeroArtLeft {
+  0%   { opacity: 0; transform: translate(-220px, 19.36px) scale(0.31); }
+  100% { opacity: 1; transform: translate(2px, 19.36px) scale(0.31); }
+}
+@keyframes heroSlideInAlina {
+  0%   { opacity: 0; transform: translateX(-180px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+
+@keyframes heroSlideInBlueRectangleRight {
+  0%   { opacity: 0; transform: translate(400px, 81.35px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-16.36px, 81.35px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInPinkRectangle {
+  0%   { opacity: 0; transform: translate(380px, 76.29px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-40.97px, 76.29px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInGrainRight {
+  0%   { opacity: 0; transform: translate(160px, -7.57px) rotate(0.35deg) scale(0.32); }
+  100% { opacity: 1; transform: translate(1.3px, -7.57px) rotate(0.35deg) scale(0.32); }
+}
+@keyframes heroSlideInHeroArtRight {
+  0%   { opacity: 0; transform: translateX(220px) scale(0.34); }
+  100% { opacity: 1; transform: translateX(0) scale(0.34); }
+}
+@keyframes heroSlideInXie {
+  0%   { opacity: 0; transform: translateX(180px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+@keyframes heroSlideInSubText {
+  0%   { opacity: 0; transform: translateX(130px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+
+@keyframes heroTwistInCheckered {
+  0%   { opacity: 0; transform: rotate(-24deg) scale(0.78); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+@keyframes heroTwistInLongRect {
+  0%   { opacity: 0; transform: translate(-55.18px, 84.53px) rotate(-32deg) scale(0.6); }
+  100% { opacity: 1; transform: translate(-55.18px, 84.53px) rotate(-3.64deg) scale(1); }
+}
+@keyframes heroTwistInStar {
+  0%   { opacity: 0; transform: rotate(90deg) scale(0.35); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+/* -- fluid exit keyframes: each element continues its entrance arc through to the opposite side -- */
+@keyframes heroFluidOutGreenRectangle {
+  0%   { opacity: 1; transform: translate(-20.7px, 36.08px) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translate(378.6px, 36.08px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutBlueRectangleLeft {
+  0%   { opacity: 1; transform: translate(-45.31px, 31.04px) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translate(349.38px, 31.04px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutGrainLeft {
+  0%   { opacity: 1; transform: translate(2px, 1.18px) scale(0.32); }
+  100% { opacity: 0; transform: translate(164px, 1.18px) scale(0.32); }
+}
+@keyframes heroFluidOutHeroArtLeft {
+  0%   { opacity: 1; transform: translate(2px, 19.36px) scale(0.31); }
+  100% { opacity: 0; transform: translate(224px, 19.36px) scale(0.31); }
+}
+@keyframes heroFluidOutAlina {
+  0%   { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translateX(180px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutBlueRectangleRight {
+  0%   { opacity: 1; transform: translate(-16.36px, 81.35px) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translate(-432.72px, 81.35px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutPinkRectangle {
+  0%   { opacity: 1; transform: translate(-40.97px, 76.29px) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translate(-461.94px, 76.29px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutGrainRight {
+  0%   { opacity: 1; transform: translate(1.3px, -7.57px) rotate(0.35deg) scale(0.32); }
+  100% { opacity: 0; transform: translate(-157.4px, -7.57px) rotate(0.35deg) scale(0.32); }
+}
+@keyframes heroFluidOutHeroArtRight {
+  0%   { opacity: 1; transform: translateX(0) scale(0.34); }
+  100% { opacity: 0; transform: translateX(-220px) scale(0.34); }
+}
+@keyframes heroFluidOutXie {
+  0%   { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translateX(-180px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutSubText {
+  0%   { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+  100% { opacity: 0; transform: translateX(-130px) rotate(-3.64deg); }
+}
+@keyframes heroFluidOutCheckered {
+  0%   { opacity: 1; transform: rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: rotate(24deg) scale(1.22); }
+}
+@keyframes heroFluidOutLongRect {
+  0%   { opacity: 1; transform: translate(-55.18px, 84.53px) rotate(-3.64deg) scale(1); }
+  100% { opacity: 0; transform: translate(-55.18px, 84.53px) rotate(24.72deg) scale(1.4); }
+}
+@keyframes heroFluidOutStar {
+  0%   { opacity: 1; transform: rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: rotate(-90deg) scale(1.5); }
+}
+
+/* ── HERO SVG VERTICAL (homeHeroVertical.svg, inlined) — entrances ── */
+/* Same slide-in/twist-in system as the horizontal hero, ported to the
+   vertical composition's own elements and base transforms. */
+
+/* -- slide in from the left -- */
+#greenRectangleV    { animation: heroSlideInGreenRectangleV    1.4s  0s     both; }
+#blackRectangleLeft  { animation: heroSlideInBlackRectangleLeft 1.4s  0.13s both; }
+#grainLeftV           { animation: heroSlideInGrainLeftV         1.45s 0.45s both; }
+#heroArtLeftV          { animation: heroSlideInHeroArtLeftV       1.45s 0.64s both; }
+#alinaV                { animation: heroSlideInAlinaV             1.3s  1.36s both; }
+
+/* -- slide in from the right -- */
+#blackRectangleRight { animation: heroSlideInBlackRectangleRight 1.4s  0.22s both; }
+#pinkRectangleV        { animation: heroSlideInPinkRectangleV      1.4s  0.32s both; }
+#grainRightV            { animation: heroSlideInGrainRightV          1.45s 0.54s both; }
+#heroArtRightV           { animation: heroSlideInHeroArtRightV        1.45s 0.74s both; }
+#xieV                    { animation: heroSlideInXieV                 1.3s  1.47s both; }
+#graphicWeb               { animation: heroSlideInGraphicWeb           1.2s  1.66s both; }
+#designer                  { animation: heroSlideInDesigner             1.2s  1.75s both; }
+
+/* -- twisting entrances -- */
+#blackCheckered      { animation: heroTwistInBlackCheckered 1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 0.83s both; }
+#blackLongRectangle   { animation: heroTwistInBlackLongRect   1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 1s    both; }
+#greenStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.12s both; }
+#blueStarV              { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.23s both; }
+#whileStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.34s both; }
+
+@keyframes heroSlideInGreenRectangleV {
+  0%   { opacity: 0; transform: translate(-170px, 17.89px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-27.68px, 17.89px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInBlackRectangleLeft {
+  0%   { opacity: 0; transform: translate(-190px, 18.87px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-44.4px, 18.87px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInGrainLeftV {
+  0%   { opacity: 0; transform: translate(-90px, 258.97px) scale(0.15, 0.17); }
+  100% { opacity: 1; transform: translate(2.8px, 258.97px) scale(0.15, 0.17); }
+}
+@keyframes heroSlideInHeroArtLeftV {
+  0%   { opacity: 0; transform: translate(-30px, 282.47px) rotate(11.22deg) scale(0.32); }
+  100% { opacity: 1; transform: translate(83.65px, 282.47px) rotate(11.22deg) scale(0.32); }
+}
+@keyframes heroSlideInAlinaV {
+  0%   { opacity: 0; transform: translateX(-140px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+
+@keyframes heroSlideInBlackRectangleRight {
+  0%   { opacity: 0; transform: translate(160px, 35.73px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-21.21px, 35.73px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInPinkRectangleV {
+  0%   { opacity: 0; transform: translate(140px, 34.05px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translate(-40.57px, 34.05px) rotate(-3.64deg); }
+}
+@keyframes heroSlideInGrainRightV {
+  0%   { opacity: 0; transform: translate(220px, 167.09px) rotate(-1.43deg) scale(0.11, 0.23); }
+  100% { opacity: 1; transform: translate(84.61px, 167.09px) rotate(-1.43deg) scale(0.11, 0.23); }
+}
+@keyframes heroSlideInHeroArtRightV {
+  0%   { opacity: 0; transform: translate(20px, 42.06px) rotate(7.69deg) scale(0.4); }
+  100% { opacity: 1; transform: translate(-192.31px, 42.06px) rotate(7.69deg) scale(0.4); }
+}
+@keyframes heroSlideInXieV {
+  0%   { opacity: 0; transform: translateX(140px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+@keyframes heroSlideInGraphicWeb {
+  0%   { opacity: 0; transform: translateX(90px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+@keyframes heroSlideInDesigner {
+  0%   { opacity: 0; transform: translateX(70px) rotate(-3.64deg); }
+  100% { opacity: 1; transform: translateX(0) rotate(-3.64deg); }
+}
+
+@keyframes heroTwistInBlackCheckered {
+  0%   { opacity: 0; transform: rotate(-24deg) scale(0.78); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+@keyframes heroTwistInBlackLongRect {
+  0%   { opacity: 0; transform: rotate(-32deg) scale(0.6); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+@keyframes heroTwistInStarV {
+  0%   { opacity: 0; transform: rotate(90deg) scale(0.35); }
+  100% { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-svg > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ── HERO SCROLL-JACK ──
+   While pinned (desktop only — see script.js), the hero sits fixed over
+   the viewport and the page itself is held still; scroll input instead
+   drives the SVG's expand/dissolve transform via JS. Once the sequence
+   finishes, the lock lifts and the page scrolls normally. */
+html.hero-scroll-locked,
+html.hero-scroll-locked body {
+  overflow: hidden !important;
+  height: 100%;
+}
+
+.home-hero.hero-pin-mode {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* above page content, below navbar (100) and dots (300) */
+  pointer-events: none; /* purely decorative — let clicks/scroll pass through */
+}
+
+.hero-svg {
+  transform-origin: 50% 50%;
+  will-change: transform, filter, opacity;
+}
+
+/* Every hero layer breaks off and flies apart independently once the
+   entrance animation has finished and JS hands them over (adds
+   .hero-break, then drives --bx/--by/--brot/--bscaleX/--bscaleY per
+   frame — bx/by already include each shape's curved swoop, not just a
+   straight line out; layers stay fully opaque throughout the break-apart
+   motion — only the hero as a whole fades at the end, via #homeHero's
+   opacity, not the individual layers). Each rule's base translate/
+   rotate/scale matches that element's original resting transform, with
+   the break-apart motion layered on top. */
+.hero-svg.hero-break #grainLeft,
+.hero-svg.hero-break #grainRight,
+.hero-svg.hero-break #greenRectangle,
+.hero-svg.hero-break #blueRectangleLeft,
+.hero-svg.hero-break #blueRectangleRight,
+.hero-svg.hero-break #pinkRectangle,
+.hero-svg.hero-break #alina,
+.hero-svg.hero-break #xie,
+.hero-svg.hero-break #heroArtLeft,
+.hero-svg.hero-break #blueLongRectangle,
+.hero-svg.hero-break #heroArtRight,
+.hero-svg.hero-break #subText,
+.hero-svg.hero-break #checkered,
+.hero-svg.hero-break #greenStar,
+.hero-svg.hero-break #blueStar,
+.hero-svg.hero-break #whileStar {
+  animation: none;
+  opacity: 1;
+}
+.hero-svg.hero-break #grainLeft {
+  transform: translate(2px, 1.18px) scale(0.32) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #grainRight {
+  transform: translate(1.3px, -7.57px) rotate(0.35deg) scale(0.32) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #greenRectangle {
+  transform: translate(-20.7px, 36.08px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blueRectangleLeft {
+  transform: translate(-45.31px, 31.04px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blueRectangleRight {
+  transform: translate(-16.36px, 81.35px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #pinkRectangle {
+  transform: translate(-40.97px, 76.29px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #alina,
+.hero-svg.hero-break #xie,
+.hero-svg.hero-break #subText {
+  transform: rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #heroArtLeft {
+  transform: translate(2px, 19.36px) scale(0.31) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blueLongRectangle {
+  transform: translate(-55.18px, 84.53px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #heroArtRight {
+  transform: scale(0.34) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #checkered,
+.hero-svg.hero-break #greenStar,
+.hero-svg.hero-break #blueStar,
+.hero-svg.hero-break #whileStar {
+  transform: translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+
+/* Every vertical-hero layer breaks off the same way — same --bx/--by/
+   --brot/--bscaleX/--bscaleY custom-property system, just against this
+   composition's own elements and base transforms. */
+.hero-svg.hero-break #greenRectangleV,
+.hero-svg.hero-break #blackRectangleLeft,
+.hero-svg.hero-break #blackRectangleRight,
+.hero-svg.hero-break #pinkRectangleV,
+.hero-svg.hero-break #alinaV,
+.hero-svg.hero-break #xieV,
+.hero-svg.hero-break #heroArtLeftV,
+.hero-svg.hero-break #blackLongRectangle,
+.hero-svg.hero-break #heroArtRightV,
+.hero-svg.hero-break #graphicWeb,
+.hero-svg.hero-break #designer,
+.hero-svg.hero-break #blackCheckered,
+.hero-svg.hero-break #greenStarV,
+.hero-svg.hero-break #blueStarV,
+.hero-svg.hero-break #whileStarV,
+.hero-svg.hero-break #grainLeftV,
+.hero-svg.hero-break #grainRightV {
+  animation: none;
+  opacity: 1;
+}
+.hero-svg.hero-break #grainLeftV {
+  transform: translate(2.8px, 258.97px) scale(0.15, 0.17) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #grainRightV {
+  transform: translate(84.61px, 167.09px) rotate(-1.43deg) scale(0.11, 0.23) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #greenRectangleV {
+  transform: translate(-27.68px, 17.89px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blackRectangleLeft {
+  transform: translate(-44.4px, 18.87px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blackRectangleRight {
+  transform: translate(-21.21px, 35.73px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #pinkRectangleV {
+  transform: translate(-40.57px, 34.05px) rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #alinaV,
+.hero-svg.hero-break #xieV,
+.hero-svg.hero-break #graphicWeb,
+.hero-svg.hero-break #designer {
+  transform: rotate(-3.64deg) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #heroArtLeftV {
+  transform: translate(83.65px, 282.47px) rotate(11.22deg) scale(0.32) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #heroArtRightV {
+  transform: translate(-192.31px, 42.06px) rotate(7.69deg) scale(0.4) translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
+}
+.hero-svg.hero-break #blackLongRectangle,
+.hero-svg.hero-break #blackCheckered,
+.hero-svg.hero-break #greenStarV,
+.hero-svg.hero-break #blueStarV,
+.hero-svg.hero-break #whileStarV {
+  transform: translate(var(--bx, 0px), var(--by, 0px)) rotate(var(--brot, 0deg)) scale(var(--bscaleX, 1), var(--bscaleY, 1));
 }
 
 /* ── PROJECTS SECTION ── */
@@ -3203,7 +3668,7 @@ body.pg-grid-mode .pg-coords {
 :root {
   --game-bg-1: #f9f9f7;
   --game-bg-2: #f9f9f7;
-  --game-cyan: #7ecfd4;
+  --game-cyan: #78c193;
   --game-magenta: #bd2f9e;
   --game-line: rgba(126, 207, 212, 0.3);
 }
@@ -3212,21 +3677,21 @@ body.pg-grid-mode .pg-coords {
 .game-mode-btn {
   position: relative;
   top: 84px;
-  left: 24px;
+  left: 44px;
   z-index: 90;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   background: #f9f9f7;
-  opacity: 0.5;
-  border: 1px solid rgba(79, 243, 255, 0.5);
+  opacity: 0.6;
+  border: 1px solid #78c193;
   border-radius: 999px;
   color: #555;
-  /* font-family: 'JetBrains Mono', monospace; */
-  font-size: 11px;
+  font-family: 'DM Sans';
+  font-size: 16px;
   /* letter-spacing: 0.12em; */
-  letter-spacing: 0.08em;
+  letter-spacing: 0em;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   transition: box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
@@ -3236,15 +3701,15 @@ body.pg-grid-mode .pg-coords {
 .game-mode-btn:hover {
   transform: translateY(-2px);
   border-color: rgba(25, 94, 99, 0.5);
-  box-shadow: 0 0 22px rgba(79, 243, 255, 0.405);
+  box-shadow: 24px 24px 48px rgba(79, 243, 255, 0.405);
   opacity: 1;
 }
 
 .game-mode-btn-icon { font-size: 9px; }
 
 @keyframes gameBtnPulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(79, 243, 255, 0.25), 0 4px 16px rgba(0, 0, 0, 0.25); }
-  50% { box-shadow: 0 0 16px rgba(79, 243, 255, 0.55), 0 4px 16px rgba(0, 0, 0, 0.25); }
+  0%, 100% { box-shadow: 0 0 6px #34e876, 0 4px 16px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 0 16px #87c39d, 0 4px 16px rgba(0, 0, 0, 0.25); }
 }
 
 /* ── OVERLAY SHELL ── */
@@ -3323,8 +3788,8 @@ body.game-mode-active { overflow: hidden; }
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #5bacb1;
-  text-shadow: 0 0 12px rgba(79, 243, 255, 0.6);
+  color: #63a079;
+  text-shadow: 0 0 12px rgba(79, 243, 255, 0.742);
 }
 
 .game-hud-text {
@@ -3377,6 +3842,7 @@ body.game-mode-active { overflow: hidden; }
 .game-exit-btn:hover {
   border-color: var(--game-magenta);
   box-shadow: 0 0 24px #bd2f9e;
+  background-color: #f9f9f7;
 }
 
 .game-hint {
@@ -3389,7 +3855,7 @@ body.game-mode-active { overflow: hidden; }
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 12px #7ecfd4;
+  text-shadow: 0 0 12px #78c193;
 }
 
 /* ── WORLD ── */
@@ -3573,7 +4039,7 @@ body.game-mode-active { overflow: hidden; }
 
 .game-pad-btn {
   background: #eeeff1;
-  border: 1px solid #7ecfd4;
+  border: 1px solid #78c193;
   border-radius: 10px;
   color: var(--game-cyan);
   font-size: 16px;
@@ -3661,7 +4127,7 @@ body.game-mode-active { overflow: hidden; }
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #7ecfd4;
+  border: 1px solid #78c193;
   border-radius: 50%;
   color: var(--game-cyan);
   cursor: pointer;
@@ -3676,8 +4142,9 @@ body.game-mode-active { overflow: hidden; }
 }
 
 .game-mute-btn:hover {
-  border-color: var(--game-cyan);
-  box-shadow: 0 0 14px rgba(79, 243, 255, 0.5);
+  border-color: #63a079;
+  box-shadow: 0 0 24px #63a079;
+  background-color: #f9f9f7;
 }
 
 /* ── TOAST (brief celebratory message) ── */
@@ -3689,13 +4156,13 @@ body.game-mode-active { overflow: hidden; }
   z-index: 7;
   padding: 10px 20px;
   background: rgba(192, 245, 255, 0.9);
-  border: 1px solid #5bacb1;
+  border: 1px solid #78c193;
   border-radius: 999px;
   color: #555;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
-  text-shadow: 0 0 10px #5bacb1;
+  text-shadow: 0 0 10px #78c193;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -3816,7 +4283,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .game-mode-btn { position: relative; top: 100px; left: 16px; padding: 8px 12px; font-size: 10px; }
+  .game-mode-btn { position: relative; top: 100px; left: 24px; padding: 12px 15px; font-size: 11px; }
   .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
@@ -3839,7 +4306,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; top: 80px; left: 12px; padding: 7px 10px; font-size: 9px; }
+  .game-mode-btn { position: relative; top: 80px; left: 16px; padding: 8px 12px; font-size: 10px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }

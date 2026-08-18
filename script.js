@@ -566,7 +566,7 @@ document.querySelectorAll('img').forEach(function(img) {
     if (!hero) return;
     var heroRect = hero.getBoundingClientRect();
     var scrolledPast = -heroRect.top;
-    var triggerPoint = window.innerHeight * 0.45;
+    var triggerPoint = window.innerHeight * 0.1;
 
     if (scrolledPast > triggerPoint && !scattered) {
       scattered = true;
@@ -620,7 +620,7 @@ document.querySelectorAll('img').forEach(function(img) {
     '#e8e4f0',  // thumb 1 (Haddee) — soft lavender
     '#e4ede8',  // thumb 2 (Recycling Mirage) — sage green
     '#f0e8e4',  // thumb 2 (Creative coding) — dusty rose
-    '#f7e4f4',  // thumb 3 (Playground) — light pink
+    '#f1e5ee',  // thumb 3 (Playground) — light pink
   ];
 
   function setBgColor(dotIdx) {
@@ -737,6 +737,16 @@ document.querySelectorAll('img').forEach(function(img) {
     if (thumb) updateTextPanel(thumb, dotIdx - 1);
   }
 
+  // Exposed for the hero scroll-jack module: force the dot nav / bg color
+  // back to the hero state when the pinned intro is showing again.
+  window.homeStripShowHero = function () {
+    hasEntered = false;
+    currentIdx = 0;
+    updateDots(0);
+    setBgColor(0);
+    thumbs.forEach(function (t) { t.classList.remove('is-active'); });
+  };
+
   // ── Hero visibility → dot 0 ──
   if (hero) {
     var heroObs = new IntersectionObserver(function (entries) {
@@ -754,8 +764,12 @@ document.querySelectorAll('img').forEach(function(img) {
   dots.forEach(function (dot, i) {
     dot.addEventListener('click', function () {
       if (dot.dataset.target === 'hero') {
+        if (window.heroIntroReset) window.heroIntroReset();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
+        // Release the pinned hero first, in case it's still mid-intro,
+        // so the page is actually free to scroll to the target.
+        if (window.heroIntroSkip) window.heroIntroSkip();
         var thumbIdx = parseInt(dot.dataset.target);
         // Scroll page to position where that card will be centered
         var outerTop = outer.getBoundingClientRect().top + window.scrollY;
@@ -1996,4 +2010,272 @@ var PG_IMAGE_SOURCES = [
     layoutPortals();
     placeShards();
   });
+})();
+
+// ── HERO SVG (heroHome.svg / homeHeroVertical.svg): pinned scroll-jack — expands + dissolves into the project content ──
+(function () {
+  var hero = document.getElementById('homeHero');
+  if (!hero) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  // Below 860px the vertical composition (homeHeroVertical.svg) is the one
+  // CSS actually shows — see the matching media query in style.css — so
+  // that's the one this module should animate. Above it, the horizontal
+  // composition stays exactly as it was.
+  var isNarrow = window.innerWidth <= 860;
+  var heroSvg = document.querySelector(isNarrow ? '.hero-svg-vertical' : '.hero-svg-horizontal');
+  if (!heroSvg) return;
+
+  var MAX_SCALE  = 2.6;  // how large the artwork grows by the end
+  var MAX_BLUR   = 10;   // px, dissolve blur that kicks in near the end
+  var START_Y    = 36;   // px, hero sits lower than center at rest
+  var MAX_LIFT   = 70;   // px, total upward travel from START_Y by the end
+  var MAX_ROTATE = 1.6;  // deg, subtle organic twist
+  var DISTANCE   = 800;  // px of accumulated scroll delta to play through fully
+
+  var target = 0;    // 0..1 — where the input wants the sequence to be
+  var shown  = 0;     // 0..1 — smoothed value actually rendered each frame
+  var locked = true;  // true while we're intercepting scroll to drive the hero
+  var rafId  = null;
+
+  // Every layer in the hero breaks off and flies apart independently as
+  // it expands — nothing just rides along with the uniform scale. delay/span stagger each layer within the overall 0..1 progress; damp
+  // gives each one its own lag/weight (lower = heavier/slower to catch
+  // up, higher = lighter/snappier); arc bows the path into a swoop
+  // instead of a straight line (sign flips the curve direction).
+  var BREAK_LAYERS_HORIZONTAL = [
+    { id: 'grainLeft',           dx: -180, dy:   80, rot: -12,  scaleToX: 1.05, scaleToY: 1.05, arc:  40,  delay: 0.00, span: 0.9,  damp: 0.07  },
+    { id: 'grainRight',          dx:  180, dy:  -80, rot:  12,  scaleToX: 1.05, scaleToY: 1.05, arc: -40,  delay: 0.02, span: 0.9,  damp: 0.075 },
+    { id: 'greenRectangle',      dx: -260, dy: -130, rot: -34,  scaleToX: 1.22, scaleToY: 1.14, arc:  90,  delay: 0.02, span: 0.85, damp: 0.09  },
+    { id: 'pinkRectangle',       dx:  280, dy:  180, rot:  30,  scaleToX: 1.22, scaleToY: 1.14, arc: -90,  delay: 0.03, span: 0.85, damp: 0.095 },
+    { id: 'blueRectangleLeft',   dx: -320, dy:  150, rot:  26,  scaleToX: 1.08, scaleToY: 1.18, arc: -70,  delay: 0.05, span: 0.85, damp: 0.1   },
+    { id: 'blueRectangleRight',  dx:  300, dy: -160, rot: -24,  scaleToX: 1.08, scaleToY: 1.16, arc:  80,  delay: 0.08, span: 0.85, damp: 0.1   },
+    { id: 'alina',               dx: -220, dy:  140, rot:  -8,  scaleToX: 1.1,  scaleToY: 1.1,  arc:  50,  delay: 0.07, span: 0.85, damp: 0.08  },
+    { id: 'xie',                 dx:  220, dy:  160, rot:   8,  scaleToX: 1.1,  scaleToY: 1.1,  arc: -50,  delay: 0.1,  span: 0.85, damp: 0.085 },
+    { id: 'heroArtLeft',         dx: -240, dy:   60, rot: -10,  scaleToX: 1.12, scaleToY: 1.12, arc:  70,  delay: 0.12, span: 0.8,  damp: 0.09  },
+    { id: 'blueLongRectangle',   dx:    0, dy:  240, rot:  40,  scaleToX: 1.3,  scaleToY: 1.08, arc:  60,  delay: 0.14, span: 0.8,  damp: 0.085 },
+    { id: 'heroArtRight',        dx:  240, dy:  -60, rot:  10,  scaleToX: 1.12, scaleToY: 1.12, arc: -70,  delay: 0.15, span: 0.8,  damp: 0.095 },
+    { id: 'subText',             dx:  200, dy:  200, rot:   6,  scaleToX: 1.05, scaleToY: 1.05, arc: -60,  delay: 0.15, span: 0.8,  damp: 0.1   },
+    { id: 'checkered',           dx: -160, dy:  260, rot: -55,  scaleToX: 1.15, scaleToY: 1.25, arc: -110, delay: 0.17, span: 0.75, damp: 0.11  },
+    { id: 'greenStar',           dx:  190, dy: -230, rot:  160, scaleToX: 1.35, scaleToY: 1.25, arc:  130, delay: 0.2,  span: 0.7,  damp: 0.16  },
+    { id: 'blueStar',            dx:  250, dy:  -70, rot: -190, scaleToX: 1.25, scaleToY: 1.35, arc: -150, delay: 0.24, span: 0.7,  damp: 0.17  },
+    { id: 'whileStar',           dx:  120, dy: -290, rot:  240, scaleToX: 1.4,  scaleToY: 1.3,  arc:  170, delay: 0.28, span: 0.7,  damp: 0.18  }
+  ];
+
+  // Same system, ported to homeHeroVertical.svg's own elements — dx/dy
+  // point outward from that composition's own center instead of reusing
+  // the horizontal layout's directions.
+  var BREAK_LAYERS_VERTICAL = [
+    { id: 'grainLeftV',          dx: -150, dy:   60, rot: -10,  scaleToX: 1.05, scaleToY: 1.05, arc:  35,  delay: 0.00, span: 0.9,  damp: 0.07  },
+    { id: 'grainRightV',         dx:  150, dy:  -60, rot:  10,  scaleToX: 1.05, scaleToY: 1.05, arc: -35,  delay: 0.02, span: 0.9,  damp: 0.075 },
+    { id: 'greenRectangleV',     dx: -180, dy: -215, rot: -30,  scaleToX: 1.2,  scaleToY: 1.15, arc:  80,  delay: 0.00, span: 0.85, damp: 0.09  },
+    { id: 'pinkRectangleV',      dx:  250, dy:  120, rot:  25,  scaleToX: 1.2,  scaleToY: 1.14, arc: -75,  delay: 0.03, span: 0.85, damp: 0.095 },
+    { id: 'blackRectangleLeft',  dx: -210, dy:  180, rot:  24,  scaleToX: 1.1,  scaleToY: 1.18, arc: -70,  delay: 0.05, span: 0.85, damp: 0.1   },
+    { id: 'blackRectangleRight', dx:  145, dy: -235, rot: -22,  scaleToX: 1.1,  scaleToY: 1.16, arc:  65,  delay: 0.08, span: 0.85, damp: 0.1   },
+    { id: 'alinaV',              dx: -190, dy: -205, rot:  -8,  scaleToX: 1.1,  scaleToY: 1.1,  arc:  50,  delay: 0.07, span: 0.85, damp: 0.08  },
+    { id: 'xieV',                dx:  210, dy:  130, rot:   8,  scaleToX: 1.1,  scaleToY: 1.1,  arc: -55,  delay: 0.1,  span: 0.85, damp: 0.085 },
+    { id: 'heroArtLeftV',        dx: -200, dy:   50, rot:  -9,  scaleToX: 1.12, scaleToY: 1.12, arc:  60,  delay: 0.12, span: 0.8,  damp: 0.09  },
+    { id: 'blackLongRectangle',  dx:  140, dy:  240, rot:  35,  scaleToX: 1.25, scaleToY: 1.08, arc:  55,  delay: 0.14, span: 0.8,  damp: 0.085 },
+    { id: 'heroArtRightV',       dx:  200, dy:  -50, rot:   9,  scaleToX: 1.12, scaleToY: 1.12, arc: -60,  delay: 0.15, span: 0.8,  damp: 0.095 },
+    { id: 'graphicWeb',          dx:  150, dy:  235, rot:   6,  scaleToX: 1.05, scaleToY: 1.05, arc: -50,  delay: 0.15, span: 0.8,  damp: 0.1   },
+    { id: 'designer',            dx:  165, dy:  230, rot:   7,  scaleToX: 1.05, scaleToY: 1.05, arc: -55,  delay: 0.18, span: 0.8,  damp: 0.105 },
+    { id: 'blackCheckered',      dx: -115, dy: -250, rot: -45,  scaleToX: 1.15, scaleToY: 1.22, arc: -90,  delay: 0.17, span: 0.75, damp: 0.11  },
+    { id: 'greenStarV',          dx:  170, dy:  190, rot:  170, scaleToX: 1.3,  scaleToY: 1.25, arc:  110, delay: 0.2,  span: 0.7,  damp: 0.16  },
+    { id: 'blueStarV',           dx:  190, dy:  230, rot: -195, scaleToX: 1.25, scaleToY: 1.32, arc: -130, delay: 0.24, span: 0.7,  damp: 0.17  },
+    { id: 'whileStarV',          dx:  150, dy:  200, rot:  230, scaleToX: 1.35, scaleToY: 1.28, arc:  140, delay: 0.28, span: 0.7,  damp: 0.18  }
+  ];
+
+  var BREAK_LAYERS = isNarrow ? BREAK_LAYERS_VERTICAL : BREAK_LAYERS_HORIZONTAL;
+  var breakEls = BREAK_LAYERS.map(function (layer) {
+    var len = Math.sqrt(layer.dx * layer.dx + layer.dy * layer.dy) || 1;
+    return {
+      el: document.getElementById(layer.id),
+      cfg: layer,
+      cur: 0,
+      perpX: -layer.dy / len, // unit vector perpendicular to the flight
+      perpY:  layer.dx / len  // path, used to bow it into a swoop
+    };
+  }).filter(function (l) { return !!l.el; });
+
+  // Give the entrance animations (slide-in / twist-in) time to finish
+  // before handing these layers over to scroll-driven break-apart motion,
+  // so there's no visual pop mid-entrance.
+  var breakAwayReady = false;
+  setTimeout(function () {
+    breakAwayReady = true;
+    heroSvg.classList.add('hero-break');
+    requestRender();
+  }, 3000);
+
+  // Gentle spring overshoot — shapes ease past their resting offset by a
+  // touch before settling, instead of stopping dead.
+  function easeOutBack(t) {
+    var c1 = 1.12, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  function updateBreakLayers(p) {
+    if (!breakAwayReady) return true;
+    var settled = true;
+    breakEls.forEach(function (l) {
+      var localTarget = clamp((p - l.cfg.delay) / l.cfg.span, 0, 1);
+      var targetEased = easeOutBack(localTarget);
+      l.cur += (targetEased - l.cur) * l.cfg.damp;
+      if (Math.abs(targetEased - l.cur) < 0.0008) l.cur = targetEased;
+      else settled = false;
+
+      var e = l.cur;
+      var t = clamp(e, 0, 1);
+      // Bow the straight-line offset into a swoop: the bulge peaks at the
+      // midpoint of the flight and returns to zero by the end, so the
+      // shape still lands exactly on dx/dy but arrives via a curve.
+      var arc = Math.sin(t * Math.PI) * l.cfg.arc;
+      var bx = e * l.cfg.dx + arc * l.perpX;
+      var by = e * l.cfg.dy + arc * l.perpY;
+
+      l.el.style.setProperty('--bx', bx.toFixed(1) + 'px');
+      l.el.style.setProperty('--by', by.toFixed(1) + 'px');
+      l.el.style.setProperty('--brot', (e * l.cfg.rot).toFixed(1) + 'deg');
+      l.el.style.setProperty('--bscaleX', (1 + e * (l.cfg.scaleToX - 1)).toFixed(3));
+      l.el.style.setProperty('--bscaleY', (1 + e * (l.cfg.scaleToY - 1)).toFixed(3));
+    });
+    return settled;
+  }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function lockScroll()   { document.documentElement.classList.add('hero-scroll-locked'); }
+  function unlockScroll() { document.documentElement.classList.remove('hero-scroll-locked'); }
+
+  function render() {
+    rafId = null;
+    shown += (target - shown) * 0.15;
+    if (Math.abs(target - shown) < 0.0006) shown = target;
+
+    var p = shown;
+    // Opacity holds through the first third (so the expand motion reads
+    // clearly) then eases out over the rest of the sequence.
+    var eased = p < 0.32 ? 1 : 1 - Math.pow((p - 0.32) / 0.68, 1.35);
+    var opacity = clamp(eased, 0, 1);
+    var scale = 1 + p * (MAX_SCALE - 1);
+    var blur  = p > 0.55 ? ((p - 0.55) / 0.45) * MAX_BLUR : 0;
+    var posY  = START_Y - p * MAX_LIFT;
+    var rotate = p * MAX_ROTATE;
+
+    heroSvg.style.transform = 'translateY(' + posY.toFixed(2) + 'px) scale(' + scale.toFixed(4) + ') rotate(' + rotate.toFixed(3) + 'deg)';
+    heroSvg.style.filter = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : '';
+    hero.style.opacity = opacity.toFixed(4);
+    var layersSettled = updateBreakLayers(p);
+
+    if (p >= 0.999 && locked) {
+      // Fully expanded and dissolved — hand scrolling back to the page.
+      locked = false;
+      unlockScroll();
+    }
+    if (p <= 0.001 && locked && window.homeStripShowHero) {
+      // Fully reversed back to the intro — make sure the dot nav agrees.
+      window.homeStripShowHero();
+    }
+
+    // Keep animating while the master value is catching up, or while any
+    // break-apart layer is still settling into place (their own lag can
+    // outlast the master's).
+    if (shown !== target || !layersSettled) rafId = requestAnimationFrame(render);
+  }
+
+  function requestRender() { if (!rafId) rafId = requestAnimationFrame(render); }
+  function setTarget(next) { target = clamp(next, 0, 1); requestRender(); }
+
+  function onWheel(e) {
+    if (locked) {
+      e.preventDefault();
+      setTarget(target + e.deltaY / DISTANCE);
+    } else if (window.scrollY <= 0 && e.deltaY < 0) {
+      // Scrolled back to the very top — recapture and reverse the intro.
+      e.preventDefault();
+      locked = true;
+      lockScroll();
+      setTarget(target + e.deltaY / DISTANCE);
+    }
+  }
+
+  var touchY = 0;
+  function onTouchStart(e) { touchY = e.touches[0].clientY; }
+  function onTouchMove(e) {
+    var y = e.touches[0].clientY;
+    var delta = touchY - y; // finger moving up == scrolling down
+    if (locked) {
+      e.preventDefault();
+      setTarget(target + delta / DISTANCE);
+      touchY = y;
+    } else if (window.scrollY <= 0 && delta < 0) {
+      e.preventDefault();
+      locked = true;
+      lockScroll();
+      setTarget(target + delta / DISTANCE);
+      touchY = y;
+    }
+  }
+
+  var FORWARD_KEYS  = { ArrowDown: 1, PageDown: 1, ' ': 1, Spacebar: 1 };
+  var BACKWARD_KEYS = { ArrowUp: 1, PageUp: 1 };
+  function onKeydown(e) {
+    if (locked && FORWARD_KEYS[e.key]) {
+      e.preventDefault();
+      setTarget(target + 0.16);
+    } else if (locked && BACKWARD_KEYS[e.key]) {
+      e.preventDefault();
+      setTarget(target - 0.16);
+    } else if (!locked && window.scrollY <= 0 && BACKWARD_KEYS[e.key]) {
+      e.preventDefault();
+      locked = true;
+      lockScroll();
+      setTarget(target - 0.16);
+    }
+  }
+
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('keydown', onKeydown);
+
+  // Let other homepage scripts (dot nav) jump the intro forward/back
+  // instantly when they jump the page around programmatically.
+  window.heroIntroSkip = function () {
+    if (!locked) return;
+    locked = false;
+    target = 1;
+    shown = 1;
+    unlockScroll();
+    render();
+  };
+  window.heroIntroReset = function () {
+    locked = true;
+    target = 0;
+    shown = 0;
+    lockScroll();
+    render();
+  };
+
+  // Arriving via an anchor straight to the project content — e.g. the
+  // project pages' "back to projects" link, index.html#homeScrollStrip —
+  // should land there directly instead of showing the pinned hero intro.
+  // Our own scroll lock (below) would otherwise block the browser's
+  // native scroll-to-anchor before it gets a chance to run, so detect
+  // this case up front and skip the intro instead of locking.
+  var jumpHash = window.location.hash.slice(1);
+  var jumpTarget = jumpHash && jumpHash !== hero.id ? document.getElementById(jumpHash) : null;
+
+  hero.classList.add('hero-pin-mode');
+  if (jumpTarget) {
+    locked = false;
+    target = 1;
+    shown = 1;
+    render();
+    jumpTarget.scrollIntoView();
+  } else {
+    lockScroll();
+    requestRender();
+  }
 })();
