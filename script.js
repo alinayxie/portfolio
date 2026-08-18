@@ -98,20 +98,20 @@ if (masonryCarousel) {
 
   var offset = 0;
   var speed = 0.6;
+  var setWidth = 0; // computed once images are loaded, not every frame
 
-  function getSetWidth() {
+  function computeSetWidth() {
     var total = 0;
     var allImgs = masonryTrack.querySelectorAll('img');
     var half = allImgs.length / 2;
     for (var i = 0; i < half; i++) {
       total += allImgs[i].offsetWidth + 10;
     }
-    return total;
+    setWidth = total;
   }
 
   function tick() {
     offset += speed;
-    var setWidth = getSetWidth();
     if (offset >= setWidth) {
       offset -= setWidth;
     }
@@ -124,14 +124,16 @@ if (masonryCarousel) {
   allImgs.forEach(function(img) {
     if (img.complete) {
       loaded++;
-      if (loaded === allImgs.length) requestAnimationFrame(tick);
+      if (loaded === allImgs.length) { computeSetWidth(); requestAnimationFrame(tick); }
     } else {
       img.addEventListener('load', function() {
         loaded++;
-        if (loaded === allImgs.length) requestAnimationFrame(tick);
+        if (loaded === allImgs.length) { computeSetWidth(); requestAnimationFrame(tick); }
       });
     }
   });
+
+  window.addEventListener('resize', computeSetWidth);
 }
 
 // ── PERSONAL WORK LIGHTBOX ──
@@ -637,6 +639,7 @@ document.querySelectorAll('img').forEach(function(img) {
   var targetY     = 0;
   var currentY    = 0;
   var hasEntered  = false; // true once user has scrolled into the outer
+  var animRafId   = null; // null when the loop is stopped (settled, idle)
 
   // ── Size the outer wrapper so page has enough room to scroll ──
   function measure() {
@@ -651,8 +654,9 @@ document.querySelectorAll('img').forEach(function(img) {
   }
 
   // ── Map page scroll position inside the outer to a strip offset ──
-  function getTargetY() {
-    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+  // outerTop is passed in so animate() only reads layout once per frame
+  // instead of computing it twice.
+  function getTargetY(outerTop) {
     var scrolled = Math.max(0, window.scrollY - outerTop);
     return -scrolled;
   }
@@ -665,15 +669,18 @@ document.querySelectorAll('img').forEach(function(img) {
     return Math.max(0, Math.min(n - 1, idx));
   }
 
-  // ── Lerp animation loop ──
+  // ── Lerp animation loop — only runs while actually settling; stops
+  //    once caught up instead of ticking forever in the background ──
   function animate() {
-    targetY  = getTargetY();
+    animRafId = null;
+
+    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
+    targetY  = getTargetY(outerTop);
     currentY += (targetY - currentY) * 0.1;
 
     var rounded = Math.round(currentY);
     track.style.transform = 'translateY(' + rounded + 'px)';
 
-    var outerTop = outer.getBoundingClientRect().top + window.scrollY;
     var scrolledIntoOuter = window.scrollY - outerTop;
 
     // Only start tracking thumbs once user has scrolled past the trackPad
@@ -688,7 +695,19 @@ document.querySelectorAll('img').forEach(function(img) {
       if (dotIdx !== currentIdx) markActive(dotIdx, thumbs[thumbIdx]);
     }
 
-    requestAnimationFrame(animate);
+    // Keep animating while still catching up to the scroll position;
+    // once close enough, snap exactly and go idle until scroll/resize
+    // wakes it again — no reason to force layout 60x/sec at rest.
+    if (Math.abs(targetY - currentY) > 0.4) {
+      animRafId = requestAnimationFrame(animate);
+    } else if (currentY !== targetY) {
+      currentY = targetY;
+      track.style.transform = 'translateY(' + Math.round(currentY) + 'px)';
+    }
+  }
+
+  function requestAnimate() {
+    if (!animRafId) animRafId = requestAnimationFrame(animate);
   }
 
   // ── Update dots and text panel ──
@@ -843,8 +862,13 @@ document.querySelectorAll('img').forEach(function(img) {
     animate();
   }
 
+  // Wake the loop on scroll (the whole reason it needs to run at all) and
+  // on resize (measure() can shift the target even without a scroll).
+  window.addEventListener('scroll', requestAnimate, { passive: true });
+
   window.addEventListener('resize', function () {
     measure();
+    requestAnimate();
   });
 
   init();
