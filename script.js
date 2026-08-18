@@ -2036,6 +2036,32 @@ var PG_IMAGE_SOURCES = [
   });
 })();
 
+// ── HERO TEXT POSITION: Safari override ──
+// The x/y baked into the SVG markup are tuned for Chrome. Safari renders
+// these large DM Sans glyphs with different metrics, so a handful of the
+// hero text elements need their own coordinates in Safari. Everything else
+// about the SVGs (shapes, other text, animation) stays identical.
+(function () {
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (!isSafari) return;
+
+  var safariPositions = {
+    xie:        { x: '797.96', y: '782' },
+    subText:    { x: '1150',   y: '1050' },
+    alinaV:     { x: '40',     y: '555' },
+    xieV:       { x: '342',    y: '670' },
+    graphicWeb: { x: '403',    y: '837' },
+    designer:   { x: '465',    y: '870' }
+  };
+
+  Object.keys(safariPositions).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('x', safariPositions[id].x);
+    el.setAttribute('y', safariPositions[id].y);
+  });
+})();
+
 // ── HERO SVG (heroHome.svg / homeHeroVertical.svg): pinned scroll-jack — expands + dissolves into the project content ──
 (function () {
   var hero = document.getElementById('homeHero');

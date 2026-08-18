@@ -1468,6 +1468,17 @@ transform: scale(1.04);
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* DM Sans is a variable font with an optical-size (opsz) axis. Left on
+   "auto", Chrome and Safari each resolve opsz differently at these huge
+   display sizes, which changes the actual glyph shapes/metrics (not the
+   x/y attributes) — that's what reads as the text sitting in a different
+   spot between browsers. Locking it to one fixed value makes both browsers
+   draw identical glyphs. */
+.hero-svg text {
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 40;
+}
+
 /* -- slide in from the left -- */
 #greenRectangle    { animation: heroSlideInGreenRectangle    1.4s  0s     both; }
 #blueRectangleLeft { animation: heroSlideInBlueRectangleLeft 1.4s  0.13s  both; }
