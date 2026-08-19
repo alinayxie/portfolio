@@ -1,3 +1,13 @@
+// ── DISABLE RIGHT-CLICK ON IMAGES ──
+// Delegated to document so it covers every <img> on the page, including
+// ones added/loaded later, without wiring up each one individually.
+document.addEventListener('contextmenu', function (e) {
+  var tag = e.target.localName;
+  if (tag === 'img' || tag === 'image') {
+    e.preventDefault();
+  }
+});
+
 // ── NAVBAR / DROPDOWN ──
 const dropdowns = document.querySelectorAll('.dropdown');
 

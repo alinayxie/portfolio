@@ -235,7 +235,7 @@ body {
 }
 
 .footer-logo img {
-  height: 28px;
+  height: 32px;
   opacity: 0.5;
   display: block;
   transition: opacity 0.2s;
@@ -246,7 +246,7 @@ body {
 }
 
 .footer-name {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
   color: #222;
   letter-spacing: 0.04em;
@@ -4088,7 +4088,7 @@ body.game-mode-active { overflow: hidden; }
 .game-pad-btn:active,
 .game-pad-btn.is-pressed {
   background: rgba(79, 243, 255, 0.18);
-  box-shadow: 0 0 16px rgba(79, 243, 255, 0.55);
+  box-shadow: 0 0 16px #78c193;
   transform: scale(0.94);
 }
 
