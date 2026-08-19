@@ -4314,7 +4314,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .game-mode-btn { position: relative; top: 80px; left: 430px; padding: 12px 15px; font-size: 11px; }
+  .game-mode-btn { position: relative; top: 80px; left: 430px; padding: 12px 15px; font-size: 12px; }
   .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
@@ -4337,7 +4337,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; top: 85px; left: 315px; padding: 12px 12px; font-size: 12px; }
+  .game-mode-btn { position: relative; top: 85px; left: 315px; padding: 12px 14px; font-size: 12px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
