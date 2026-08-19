@@ -4337,7 +4337,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; top: 80px; left: 300px; padding: 8px 12px; font-size: 10px; }
+  .game-mode-btn { position: relative; top: 85px; left: 315px; padding: 12px 12px; font-size: 12px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
