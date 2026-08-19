@@ -2219,6 +2219,10 @@ var PG_IMAGE_SOURCES = [
     heroSvg.style.transform = 'translateY(' + posY.toFixed(2) + 'px) scale(' + scale.toFixed(4) + ') rotate(' + rotate.toFixed(3) + 'deg)';
     heroSvg.style.filter = blur > 0.05 ? 'blur(' + blur.toFixed(2) + 'px)' : '';
     hero.style.opacity = opacity.toFixed(4);
+    // Only let clicks reach the project content once the hero has actually
+    // faded out — otherwise a click meant for the still-visible artwork
+    // could land on a project link sitting underneath it.
+    hero.style.pointerEvents = opacity > 0.02 ? 'auto' : 'none';
     var layersSettled = updateBreakLayers(p);
 
     if (p >= 0.999 && locked) {

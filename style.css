@@ -1748,7 +1748,10 @@ html.hero-scroll-locked body {
   position: fixed;
   inset: 0;
   z-index: 60; /* above page content, below navbar (100) and dots (300) */
-  pointer-events: none; /* purely decorative — let clicks/scroll pass through */
+  pointer-events: auto; /* blocks clicks to project content while visible;
+                            script.js switches this to none once the hero
+                            has fully dissolved, so it stops intercepting
+                            clicks for the rest of the page's lifetime */
 }
 
 .hero-svg {
@@ -2004,6 +2007,15 @@ html.hero-scroll-locked body {
   transform: rotate(8deg) scale(1);
 }
 
+.home-thumb:hover {
+  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.32), 0 10px 26px rgba(0, 0, 0, 0.18);
+}
+
+.home-thumb:active {
+  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.533), 0 10px 26px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.25 ease;
+}
+
 /* .home-thumb.is-active:hover {
   transform: rotate(8deg) scale(1) translateY(-6px);
   box-shadow: 0 32px 72px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.16);
@@ -2056,7 +2068,7 @@ html.hero-scroll-locked body {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width430) {
   .home-thumb {
     width: 90%;
     height: 80vw;
@@ -4294,7 +4306,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .game-mode-btn { position: relative; top: 100px; left: 24px; padding: 12px 15px; font-size: 11px; }
+  .game-mode-btn { position: relative; top: 100px; left: 430px; padding: 12px 15px; font-size: 11px; }
   .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
@@ -4317,7 +4329,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; top: 80px; left: 16px; padding: 8px 12px; font-size: 10px; }
+  .game-mode-btn { position: relative; top: 80px; left: 285px; padding: 8px 12px; font-size: 10px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
