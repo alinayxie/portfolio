@@ -2066,6 +2066,14 @@ html.hero-scroll-locked body {
   .home-thumb > a {
     transform: none;
   }
+
+  .home-thumb:hover {
+    box-shadow: none;
+  }
+
+  .home-thumb:active {
+    box-shadow: none;
+  }
 }
 
 @media (max-width430) {
@@ -4306,7 +4314,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── MOBILE ── */
 @media (max-width: 700px) {
-  .game-mode-btn { position: relative; top: 100px; left: 430px; padding: 12px 15px; font-size: 11px; }
+  .game-mode-btn { position: relative; top: 80px; left: 430px; padding: 12px 15px; font-size: 11px; }
   .game-hud { margin-top: 20px; padding: 16px 18px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
@@ -4329,7 +4337,7 @@ body.game-mode-active { overflow: hidden; }
 
 /* ── SMALL PHONES ── */
 @media (max-width: 400px) {
-  .game-mode-btn { position: relative; top: 80px; left: 285px; padding: 8px 12px; font-size: 10px; }
+  .game-mode-btn { position: relative; top: 80px; left: 300px; padding: 8px 12px; font-size: 10px; }
   .game-hud { margin-top: 15px; padding: 12px 14px; }
   .game-hud-heading { font-size: 12px; }
   #gameHudLabel { font-size: 11px; }
