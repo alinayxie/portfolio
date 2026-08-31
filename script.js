@@ -2057,7 +2057,7 @@ var PG_IMAGE_SOURCES = [
 
   var safariPositions = {
     xie:        { x: '797.96', y: '782' },
-    subText:    { x: '1150',   y: '1050' },
+    subText:    { x: '1100',   y: '1050' },
     alinaV:     { x: '40',     y: '555' },
     xieV:       { x: '342',    y: '670' },
     graphicWeb: { x: '403',    y: '837' },
