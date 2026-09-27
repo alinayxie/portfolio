@@ -13,6 +13,17 @@
 </head>
 <body class="home-body">
 
+  <!-- BIRD INTRO: bird walks in place and pushes the white wall aside,
+       revealing homeHero underneath once it's fully pushed off. -->
+  <div class="bird-intro" id="birdIntro" aria-hidden="true">
+    <div class="bird-intro-wall" id="birdIntroWall">
+      <div class="bird-intro-unit" id="birdIntroUnit">
+        <div class="bird-intro-cloud" aria-hidden="true"></div>
+        <img src="images/characterMove.gif" alt="" class="bird-intro-char" id="birdIntroChar">
+      </div>
+    </div>
+  </div>
+
   <!-- Background color layer -->
   <div class="home-bg-layer" id="homeBgLayer"></div>
 

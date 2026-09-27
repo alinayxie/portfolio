@@ -8,6 +8,32 @@ document.addEventListener('contextmenu', function (e) {
   }
 });
 
+// ── HOME: BIRD INTRO (push-reveal on load) ──
+(function () {
+  var intro = document.getElementById('birdIntro');
+  var wall  = document.getElementById('birdIntroWall');
+  if (!intro || !wall) return;
+
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function finishIntro() {
+    intro.classList.add('is-done');
+    document.documentElement.classList.remove('bird-intro-active');
+  }
+
+  if (reduceMotion) {
+    finishIntro();
+    return;
+  }
+
+  document.documentElement.classList.add('bird-intro-active');
+
+  wall.addEventListener('animationend', finishIntro);
+  wall.addEventListener('click', finishIntro); // let people skip it
+  setTimeout(finishIntro, 6000); // safety net if animationend never fires
+}());
+
 // ── NAVBAR / DROPDOWN ──
 const dropdowns = document.querySelectorAll('.dropdown');
 
@@ -2164,13 +2190,16 @@ var PG_IMAGE_SOURCES = [
 
   // Give the entrance animations (slide-in / twist-in) time to finish
   // before handing these layers over to scroll-driven break-apart motion,
-  // so there's no visual pop mid-entrance.
+  // so there's no visual pop mid-entrance. The entrance animations
+  // themselves start 2s late (see the heroSlideIn*/heroTwistIn* delays
+  // in style.css, timed to the bird-intro wall-push reveal), so this
+  // hand-off is pushed back by the same 2s to stay just after they finish.
   var breakAwayReady = false;
   setTimeout(function () {
     breakAwayReady = true;
     heroSvg.classList.add('hero-break');
     requestRender();
-  }, 3000);
+  }, 5000);
 
   // Gentle spring overshoot — shapes ease past their resting offset by a
   // touch before settling, instead of stopping dead.

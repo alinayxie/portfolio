@@ -1335,6 +1335,99 @@ transform: scale(1.04);
   .footer { padding: 20px; }
 }
 /* ════════════════════════════════════════
+   HOME — BIRD INTRO (push-reveal on load)
+   characterMove.gif is a 600×600 walk-in-place loop with the bird
+   drawn flush against the image's right edge, beak touching it. The
+   wall sits immediately to that image's right (butted up with zero
+   gap), so the two move as one rigid unit. That whole unit animates
+   with a single transform: translateX(0 → 100% + bird width) — a
+   compositor-only transform, not a width/layout animation, which is
+   what keeps it smooth. The path is still monotonic — it never moves
+   backward, which is what would read as a bounce. It uses only 8
+   keyframe stops — run-up, 3 short bumps, and the smooth stretches
+   between them — and relies on the animation's own ease-in-out to
+   curve smoothly into and out of each one; no in-between "shaping"
+   stops. (Extra manual stops inside each bump made things look
+   more jagged, not less — each pair of stops gets its own little
+   ease-in-out curve, and chaining several of those back to back
+   reads as a series of small jolts rather than one smooth sweep.)
+   The run-up/stretch/glide segments keep the exact timing they've
+   always had, so nothing moves faster than before — only the bumps'
+   own internal shape changed.
+   The bird starts fully off-screen to the left (its right edge/beak
+   sits exactly at x=0, so its whole 600px body is past the left
+   edge) and ends fully off-screen to the right (translated past the
+   wall's own width by more than the bird's max rendered width). As
+   it crosses, the wall's leading (left) edge uncovers homeHero from
+   the left, with the bird riding right at that edge, reading as if
+   it's pushing the wall off.
+   ════════════════════════════════════════ */
+.bird-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bird-intro-wall {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100vw;
+  background: #111;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+  animation: birdIntroPush 5s ease-in-out 0.15s both;
+}
+
+.bird-intro-unit {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  transform: translate(-100%, -50%); /* right edge (the beak) sits flush on the wall's left edge */
+  pointer-events: none;
+  user-select: none;
+}
+
+.bird-intro-char {
+  width: clamp(140px, 16vw, 260px);
+  height: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
+@keyframes birdIntroPush {
+  0%   { transform: translateX(0); }
+  13%  { transform: translateX(calc(13% + 36px)); }   /* smooth run-up */
+  21%  { transform: translateX(calc(22% + 62px)); }   /* bump 1 */
+  40%  { transform: translateX(calc(46% + 129px)); }  /* smooth stretch */
+  48%  { transform: translateX(calc(54% + 151px)); }  /* bump 2 */
+  68%  { transform: translateX(calc(78% + 218px)); }  /* smooth stretch */
+  76%  { transform: translateX(calc(86% + 241px)); }  /* bump 3 */
+  100% { transform: translateX(calc(100% + 280px)); } /* smooth glide to a stop */
+}
+
+.bird-intro.is-done { display: none; }
+
+
+
+/* keep the page from scrolling while the intro plays */
+html.bird-intro-active,
+html.bird-intro-active body {
+  overflow: hidden !important;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bird-intro-wall { animation: none !important; transform: translateX(calc(100% + 280px)); }
+}
+
+/* ════════════════════════════════════════
    HOME — HERO + ROBIN-NOGUIER SCROLL LAYOUT
    ════════════════════════════════════════ */
 
@@ -1444,18 +1537,18 @@ transform: scale(1.04);
 }
 
 .hero-svg-horizontal {
-  width: 80%;                                        /* fallback for browsers without min()/max() */
-  max-width: 1520px;
-  width: min(max(80vw, 80vh), 105vw, 1520px);         /* grows via height on tall/narrow viewports;
-                                                          105vw ceiling caps how far it can spill past
+  width: 72%;                                        /* fallback for browsers without min()/max() */
+  max-width: 1370px;
+  width: min(max(72vw, 72vh), 95vw, 1370px);          /* grows via height on tall/narrow viewports;
+                                                          95vw ceiling caps how far it can spill past
                                                           the viewport edges so the name text never gets
                                                           cropped, since .home-hero clips the overflow */
 }
 
 .hero-svg-vertical {
-  width: 92%;                                          /* fallback for browsers without min()/max() */
-  max-width: 800px;
-  width: min(92vw, 66.7vh, 800px);                      /* portrait 2:3 artwork — width is almost always
+  width: 83%;                                          /* fallback for browsers without min()/max() */
+  max-width: 720px;
+  width: min(83vw, 60vh, 720px);                        /* portrait 2:3 artwork — width is almost always
                                                             the binding constraint on real phone screens,
                                                             since phones run narrower than 2:3 already */
 }
@@ -1480,26 +1573,26 @@ transform: scale(1.04);
 }
 
 /* -- slide in from the left -- */
-#greenRectangle    { animation: heroSlideInGreenRectangle    1.4s  0s     both; }
-#blueRectangleLeft { animation: heroSlideInBlueRectangleLeft 1.4s  0.13s  both; }
-#grainLeft          { animation: heroSlideInGrainLeft         1.45s 0.45s  both; }
-#heroArtLeft         { animation: heroSlideInHeroArtLeft        1.45s 0.64s  both; }
-#alina               { animation: heroSlideInAlina              1.3s  1.36s  both; }
+#greenRectangle    { animation: heroSlideInGreenRectangle    1.4s  2s     both; }
+#blueRectangleLeft { animation: heroSlideInBlueRectangleLeft 1.4s  2.13s  both; }
+#grainLeft          { animation: heroSlideInGrainLeft         1.45s 2.45s  both; }
+#heroArtLeft         { animation: heroSlideInHeroArtLeft        1.45s 2.64s  both; }
+#alina               { animation: heroSlideInAlina              1.3s  3.36s  both; }
 
 /* -- slide in from the right -- */
-#blueRectangleRight { animation: heroSlideInBlueRectangleRight 1.4s  0.22s both; }
-#pinkRectangle       { animation: heroSlideInPinkRectangle      1.4s  0.32s both; }
-#grainRight           { animation: heroSlideInGrainRight          1.45s 0.54s both; }
-#heroArtRight         { animation: heroSlideInHeroArtRight        1.45s 0.74s both; }
-#xie                  { animation: heroSlideInXie                 1.3s  1.47s both; }
-#subText              { animation: heroSlideInSubText              1.2s  1.66s both; }
+#blueRectangleRight { animation: heroSlideInBlueRectangleRight 1.4s  2.22s both; }
+#pinkRectangle       { animation: heroSlideInPinkRectangle      1.4s  2.32s both; }
+#grainRight           { animation: heroSlideInGrainRight          1.45s 2.54s both; }
+#heroArtRight         { animation: heroSlideInHeroArtRight        1.45s 2.74s both; }
+#xie                  { animation: heroSlideInXie                 1.3s  3.47s both; }
+#subText              { animation: heroSlideInSubText              1.2s  3.66s both; }
 
 /* -- twisting entrances -- */
-#checkered           { animation: heroTwistInCheckered  1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 0.83s both; }
-#blueLongRectangle    { animation: heroTwistInLongRect    1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 1s   both; }
-#greenStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.12s both; }
-#blueStar              { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.23s both; }
-#whileStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.34s both; }
+#checkered           { animation: heroTwistInCheckered  1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 2.83s both; }
+#blueLongRectangle    { animation: heroTwistInLongRect    1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 3s   both; }
+#greenStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.12s both; }
+#blueStar              { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.23s both; }
+#whileStar             { animation: heroTwistInStar        1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.34s both; }
 
 /* -- when scrolled 40% past: everything continues its entrance arc outward, mirrored to the opposite side -- */
 .hero-svg.is-exiting #greenRectangle    { animation: heroFluidOutGreenRectangle    1s   cubic-bezier(0.16, 1, 0.3, 1) 0s    both; }
@@ -1641,27 +1734,27 @@ transform: scale(1.04);
    vertical composition's own elements and base transforms. */
 
 /* -- slide in from the left -- */
-#greenRectangleV    { animation: heroSlideInGreenRectangleV    1.4s  0s     both; }
-#blackRectangleLeft  { animation: heroSlideInBlackRectangleLeft 1.4s  0.13s both; }
-#grainLeftV           { animation: heroSlideInGrainLeftV         1.45s 0.45s both; }
-#heroArtLeftV          { animation: heroSlideInHeroArtLeftV       1.45s 0.64s both; }
-#alinaV                { animation: heroSlideInAlinaV             1.3s  1.36s both; }
+#greenRectangleV    { animation: heroSlideInGreenRectangleV    1.4s  2s     both; }
+#blackRectangleLeft  { animation: heroSlideInBlackRectangleLeft 1.4s  2.13s both; }
+#grainLeftV           { animation: heroSlideInGrainLeftV         1.45s 2.45s both; }
+#heroArtLeftV          { animation: heroSlideInHeroArtLeftV       1.45s 2.64s both; }
+#alinaV                { animation: heroSlideInAlinaV             1.3s  3.36s both; }
 
 /* -- slide in from the right -- */
-#blackRectangleRight { animation: heroSlideInBlackRectangleRight 1.4s  0.22s both; }
-#pinkRectangleV        { animation: heroSlideInPinkRectangleV      1.4s  0.32s both; }
-#grainRightV            { animation: heroSlideInGrainRightV          1.45s 0.54s both; }
-#heroArtRightV           { animation: heroSlideInHeroArtRightV        1.45s 0.74s both; }
-#xieV                    { animation: heroSlideInXieV                 1.3s  1.47s both; }
-#graphicWeb               { animation: heroSlideInGraphicWeb           1.2s  1.66s both; }
-#designer                  { animation: heroSlideInDesigner             1.2s  1.75s both; }
+#blackRectangleRight { animation: heroSlideInBlackRectangleRight 1.4s  2.22s both; }
+#pinkRectangleV        { animation: heroSlideInPinkRectangleV      1.4s  2.32s both; }
+#grainRightV            { animation: heroSlideInGrainRightV          1.45s 2.54s both; }
+#heroArtRightV           { animation: heroSlideInHeroArtRightV        1.45s 2.74s both; }
+#xieV                    { animation: heroSlideInXieV                 1.3s  3.47s both; }
+#graphicWeb               { animation: heroSlideInGraphicWeb           1.2s  3.66s both; }
+#designer                  { animation: heroSlideInDesigner             1.2s  3.75s both; }
 
 /* -- twisting entrances -- */
-#blackCheckered      { animation: heroTwistInBlackCheckered 1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 0.83s both; }
-#blackLongRectangle   { animation: heroTwistInBlackLongRect   1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 1s    both; }
-#greenStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.12s both; }
-#blueStarV              { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.23s both; }
-#whileStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 1.34s both; }
+#blackCheckered      { animation: heroTwistInBlackCheckered 1.3s cubic-bezier(0.3, 1.15, 0.5, 1) 2.83s both; }
+#blackLongRectangle   { animation: heroTwistInBlackLongRect   1.1s cubic-bezier(0.3, 1.15, 0.5, 1) 3s    both; }
+#greenStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.12s both; }
+#blueStarV              { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.23s both; }
+#whileStarV             { animation: heroTwistInStarV           1s   cubic-bezier(0.3, 1.15, 0.5, 1) 3.34s both; }
 
 @keyframes heroSlideInGreenRectangleV {
   0%   { opacity: 0; transform: translate(-170px, 17.89px) rotate(-3.64deg); }
