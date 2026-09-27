@@ -1414,6 +1414,14 @@ transform: scale(1.04);
 
 .bird-intro.is-done { display: none; }
 
+/* Arriving via an anchor that points below the hero (e.g. the project
+   pages' "back to projects" link, index.html#homeScrollStrip) skips the
+   intro. script.js applies the same rule; this just hides the wall from
+   the very first paint so it can't flash while the script loads. :target
+   only matches when the anchor points at a real element, and the hero
+   itself is excluded. */
+body:has(:target:not(#homeHero)) .bird-intro { display: none; }
+
 
 
 /* keep the page from scrolling while the intro plays */

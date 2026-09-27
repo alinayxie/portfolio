@@ -22,7 +22,35 @@ document.addEventListener('contextmenu', function (e) {
     document.documentElement.classList.remove('bird-intro-active');
   }
 
-  if (reduceMotion) {
+  // The bird only belongs at the very top of the page, on the hero. The one
+  // way to arrive anywhere else is an anchor pointing below the hero — the
+  // project pages' "back to projects" link is index.html#homeScrollStrip —
+  // so skip the intro for that. This is the same rule the hero code near
+  // the bottom of this file uses to decide it's jumping past the hero: the
+  // anchor must exist, must not be the hero itself, and must point at a
+  // real element. Anything else (no anchor, #homeHero, an anchor that
+  // matches nothing) is a normal arrival at the top, so the bird plays.
+  //
+  // One exception: a refresh. After landing via that link the address bar
+  // keeps "#homeScrollStrip", so refreshing would count as an anchor arrival
+  // again and skip both the bird and the hero. A refresh is a fresh first
+  // load (a plain refresh already returns to the top of the hero), so drop
+  // the leftover anchor first — that way the bird and the hero both run,
+  // and the hero code further down doesn't see an anchor either.
+  var navEntry = window.performance && performance.getEntriesByType &&
+    performance.getEntriesByType('navigation')[0];
+  var isRefresh = navEntry ? navEntry.type === 'reload'
+    : !!(window.performance && performance.navigation && performance.navigation.type === 1);
+  if (isRefresh && window.location.hash) {
+    try {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch (err) { /* can't edit the address bar here; falls back to the anchor rule below */ }
+  }
+
+  var jumpHash = window.location.hash.slice(1);
+  var landsBelowHero = !!(jumpHash && jumpHash !== 'homeHero' && document.getElementById(jumpHash));
+
+  if (reduceMotion || landsBelowHero) {
     finishIntro();
     return;
   }
