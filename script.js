@@ -1073,7 +1073,8 @@ var PG_IMAGE_SOURCES = [
   'images/playground/fineArt/fineArt11.png',
   'images/playground/graphicDesign/graphicDesign6.png',
   'images/playground/graphicDesign/graphicDesign7.png',
-  'images/playground/graphicDesign/graphicDesign8.jpg'
+  'images/playground/graphicDesign/graphicDesign8.jpg',
+  'images/playground/graphicDesign/graphicDesign9.png'
 ];
 
 // ── PLAYGROUND: infinite drag-to-pan gallery ──
@@ -1399,9 +1400,9 @@ var PG_IMAGE_SOURCES = [
   });
 
   var GRAPHIC_DESIGN_COLUMNS = [
-    [1, 8, 2],
-    [3, 4, 5],
-    [7, 6]
+    [1, 6, 8],
+    [3, 5, 2],
+    [7, 9, 4]
   ].map(function (nums) {
     return nums.map(function (n) { return findSrc('graphicDesign', n); });
   });
