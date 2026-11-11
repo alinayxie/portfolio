@@ -1376,7 +1376,23 @@ transform: scale(1.04);
   left: 0;
   height: 100%;
   width: 100vw;
-  background: #111;
+  /* Film-grain texture on the black wall. --wall-grain is a tiny tiled SVG
+     of fractal noise (240px tile, repeats seamlessly): every pixel is white,
+     and the noise only sets how see-through it is, so just sparse light
+     speckles show over the black. To tune it, edit the values inside the
+     data URI below:
+       baseFrequency='0.75' — grain size (higher = finer, lower = coarser)
+       first number in the last row of the matrix (1.4) — how bright the
+         speckles get
+       last number in that row (-0.72) — how much of the wall is speckled
+         (more negative = sparser)
+     The base is pure black because the speckles lighten it; overall the
+     wall lands at about the same tone as the old flat #111. The grain is
+     part of the wall's own background, so it slides along with it. */
+  --wall-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.4 0 0 0 -0.72'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-color: #000;
+  background-image: var(--wall-grain);
+  background-size: 240px 240px;
   pointer-events: auto;
   cursor: pointer;
   will-change: transform;
@@ -4490,5 +4506,36 @@ body.game-mode-active { overflow: hidden; }
   .game-stars-2,
   .game-shard {
     animation: none !important;
+  }
+}
+/* Haddee merchandise: keep each image's original aspect ratio */
+.haddee-merch .proj-hscroll-item {
+  width: auto;
+  height: 350px;
+  aspect-ratio: auto;
+}
+
+.haddee-merch .proj-hscroll-img {
+  width: auto;
+  height: 100%;
+}
+
+@media (max-width: 700px) {
+  .haddee-merch .proj-hscroll-item {
+    height: 275px;
+  }
+}
+
+/* Haddee merchandise: mug shown at 85% height, centered in the row */
+.haddee-merch .proj-hscroll-item.haddee-merch-mug {
+  height: 298px;
+  align-self: center;
+  margin: 0 96px;
+}
+
+@media (max-width: 700px) {
+  .haddee-merch .proj-hscroll-item.haddee-merch-mug {
+    height: 234px;
+    margin: 0 72px;
   }
 }
