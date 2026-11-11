@@ -1324,7 +1324,7 @@ transform: scale(1.04);
 }
 
 .dot.active {
-  background: #78c193;
+  background: #222;
   height: 16px;
   border-radius: 2px;
 }
