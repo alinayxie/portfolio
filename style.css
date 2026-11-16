@@ -1396,7 +1396,7 @@ transform: scale(1.04);
   pointer-events: auto;
   cursor: pointer;
   will-change: transform;
-  animation: birdIntroPush 5s ease-in-out 0.15s both;
+  animation: birdIntroPush 3s ease-in-out 0.15s both;
 }
 
 .bird-intro-unit {
@@ -3332,18 +3332,18 @@ body.webart-body .footer-rule {
 }
 
 .webart-tab:nth-child(1) {
-  --accent-a: #000000;
-  --accent-b: #8a8a8a;
+  --accent-a: #1e1e1e;
+  --accent-b: #1e1e1e;
 }
 
 .webart-tab:nth-child(2) {
-  --accent-a: #00395d;
-  --accent-b: #7ec8ff;
+  --accent-a: #04212d;
+  --accent-b: #04212d;
 }
 
 .webart-tab:nth-child(3) {
-  --accent-a: #4e2e66;
-  --accent-b: #c9a0f5;
+  --accent-a: #85b6a6;
+  --accent-b: #85b6a6;
 }
 
 .webart-tab.active .webart-tab-num {
@@ -3396,18 +3396,18 @@ body.webart-body .footer-rule {
 }
 
 .webart-panel:nth-child(1) {
-  --accent-a: #000000;
-  --accent-b: #8a8a8a;
+  --accent-a: #1e1e1e;
+  --accent-b: #1e1e1e;
 }
 
 .webart-panel:nth-child(2) {
-  --accent-a: #00395d;
-  --accent-b: #7ec8ff;
+  --accent-a: #04212d;
+  --accent-b: #04212d;
 }
 
 .webart-panel:nth-child(3) {
-  --accent-a: #4e2e66;
-  --accent-b: #c9a0f5;
+  --accent-a: #85b6a6;
+  --accent-b: #85b6a6;
 }
 
 .webart-panel-info h2 {
@@ -3432,7 +3432,7 @@ body.webart-body .footer-rule {
   align-items: center;
   gap: 10px;
   align-self: flex-start;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   letter-spacing: 0.03em;
   color: #ffffff;
